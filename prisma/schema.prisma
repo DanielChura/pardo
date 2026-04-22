@@ -12,6 +12,14 @@ enum Role {
   ADMIN
 }
 
+enum OrderStatus {
+  PENDING
+  PAID
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
 model User {
   id        String   @id @default(uuid())
   email     String   @unique
@@ -23,56 +31,52 @@ model User {
 }
 
 model Product {
-  id          String            @id @default(uuid())
+  id          String      @id @default(uuid())
   name        String
   description String
   basePrice   Float
+  stock       Int
   imageUrl    String?
-  categories  VariantCategory[]
   orderItems  OrderItem[]
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
 }
 
-model VariantCategory {
-  id        String          @id @default(uuid())
-  name      String          // Ejemplo: "Madera", "Telas"
-  productId String
-  product   Product         @relation(fields: [productId], references: [id])
-  options   VariantOption[]
+model Attribute {
+  id     String           @id @default(uuid())
+  name   String           @unique
+  values AttributeValue[]
 }
 
-model VariantOption {
-  id              String          @id @default(uuid())
-  name            String          // Ejemplo: "Roble", "Pino", "Lino Gris"
-  priceAdjustment Float           @default(0)
-  categoryId      String
-  category        VariantCategory @relation(fields: [categoryId], references: [id])
-}
-
-enum OrderStatus {
-  PENDING
-  PAID
-  SHIPPED
+model AttributeValue {
+  id            String      @id @default(uuid())
+  name          String
+  imageUrl      String?
+  priceModifier Float       @default(0)
+  attributeId   String
+  attribute     Attribute   @relation(fields: [attributeId], references: [id])
+  orderItems    OrderItem[]
 }
 
 model Order {
-  id         String      @id @default(uuid())
-  userId     String
-  user       User        @relation(fields: [userId], references: [id])
-  totalPrice Float
-  status     OrderStatus @default(PENDING)
-  items      OrderItem[]
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
+  id        String      @id @default(uuid())
+  userId    String
+  user      User        @relation(fields: [userId], references: [id])
+  status    OrderStatus @default(PENDING)
+  subtotal  Float
+  total     Float
+  items     OrderItem[]
+  notes     String?
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
 }
 
 model OrderItem {
-  id         String  @id @default(uuid())
-  orderId    String
-  order      Order   @relation(fields: [orderId], references: [id])
-  productId  String
-  product    Product @relation(fields: [productId], references: [id])
-  quantity   Int     @default(1)
-  finalPrice Float   // Precio unitario congelado al momento de compra
+  id             String           @id @default(uuid())
+  orderId        String
+  order          Order            @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId      String
+  product        Product          @relation(fields: [productId], references: [id])
+  quantity       Int              @default(1)
+  unitBasePrice  Float
+  unitTotalPrice Float
+  attributes     AttributeValue[]
 }
