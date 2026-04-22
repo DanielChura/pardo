@@ -31,13 +31,14 @@ model User {
 }
 
 model Product {
-  id          String      @id @default(uuid())
-  name        String
-  description String
-  basePrice   Float
-  stock       Int
-  imageUrl    String?
-  orderItems  OrderItem[]
+  id            String      @id @default(uuid())
+  name          String
+  description   String
+  basePrice     Float
+  stock         Int
+  imageUrl      String?
+  imagePublicId String?
+  orderItems    OrderItem[]
 }
 
 model Attribute {
