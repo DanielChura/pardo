@@ -6,14 +6,10 @@ import {
   IsBoolean,
 } from 'class-validator';
 
-export class CreateProductDto {
+export class CreateWoodDto {
   @IsString()
   @IsNotEmpty()
   name!: string;
-
-  @IsString()
-  @IsOptional()
-  description?: string;
 
   @IsOptional()
   @IsString()

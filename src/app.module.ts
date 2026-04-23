@@ -4,9 +4,11 @@ import { UsersModule } from './users/users.module.js';
 import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module.js';
 import { ProductsModule } from './products/products.module.js';
-import { AttributesModule } from './attributes/attributes.module.js';
 import { OrdersModule } from './orders/orders.module.js';
 import { CloudinaryModule } from './cloudinary/cloudinary.module.js';
+import { WoodModule } from './wood/wood.module.js';
+import { FabricsModule } from './fabrics/fabrics.module.js';
+import { ProductVariantModule } from './product-variant/product-variant.module.js';
 
 @Module({
   imports: [
@@ -18,9 +20,11 @@ import { CloudinaryModule } from './cloudinary/cloudinary.module.js';
     UsersModule,
     AuthModule,
     ProductsModule,
-    AttributesModule,
     OrdersModule,
     CloudinaryModule,
+    WoodModule,
+    FabricsModule,
+    ProductVariantModule,
   ],
   controllers: [],
   providers: [],

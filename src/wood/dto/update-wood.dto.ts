@@ -1,19 +1,9 @@
-import {
-  IsNotEmpty,
-  IsString,
-  IsOptional,
-  IsUrl,
-  IsBoolean,
-} from 'class-validator';
+import { IsString, IsOptional, IsUrl, IsBoolean } from 'class-validator';
 
-export class CreateProductDto {
-  @IsString()
-  @IsNotEmpty()
-  name!: string;
-
+export class UpdateWoodDto {
   @IsString()
   @IsOptional()
-  description?: string;
+  name?: string;
 
   @IsOptional()
   @IsString()

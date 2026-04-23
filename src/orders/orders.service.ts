@@ -4,119 +4,95 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
-
-interface OrderItemInput {
-  productId: string;
-  quantity: number;
-  attributeValueIds: string[];
-}
-
-interface CreateOrderInput {
-  userId: string;
-  items: OrderItemInput[];
-  notes?: string;
-}
+import { CreateOrderDto } from './dto/create-order.dto.js';
 
 @Injectable()
 export class OrdersService {
   constructor(private prisma: PrismaService) {}
 
-  // Obtener todas las órdenes de un usuario
-  async findAll(userId: string) {
-    return this.prisma.order.findMany({
-      where: { userId },
-      include: { items: { include: { attributes: true, product: true } } },
-      orderBy: { createdAt: 'desc' },
+  async create(dto: CreateOrderDto) {
+    const { userId, items } = dto;
+
+    // 1. Iniciamos una transacción para que todo sea atómico
+    return await this.prisma.$transaction(async (tx) => {
+      let subtotal = 0;
+      const orderItemsData: any[] = [];
+
+      for (const item of items) {
+        const variant = await tx.productVariant.findUnique({
+          where: { id: item.productVariantId },
+          include: { product: true, wood: true },
+        });
+
+        const fabric = await tx.fabric.findUnique({
+          where: { id: item.fabricId },
+        });
+
+        if (!variant || !fabric) {
+          throw new NotFoundException('Variant or Fabric not found');
+        }
+
+        // 2. Validar Stock ANTES de procesar
+        if (variant.stock < item.quantity) {
+          throw new BadRequestException(
+            `Insufficient stock for ${variant.product.name}`,
+          );
+        }
+
+        const unitTotalPrice = variant.price + fabric.price;
+        subtotal += unitTotalPrice * item.quantity;
+
+        // 3. Preparar el Snapshot
+        orderItemsData.push({
+          productVariantId: variant.id,
+          fabricId: fabric.id,
+          productName: variant.product.name,
+          woodName: variant.wood.name,
+          fabricName: fabric.name,
+          quantity: item.quantity,
+          unitWoodPrice: variant.price,
+          unitFabricPrice: fabric.price,
+          unitTotalPrice: unitTotalPrice,
+        });
+
+        // 4. Descontar Stock dentro de la transacción
+        await tx.productVariant.update({
+          where: { id: variant.id },
+          data: { stock: { decrement: item.quantity } },
+        });
+
+        // Si el Fabric también tiene stock, descontarlo aquí
+        await tx.fabric.update({
+          where: { id: fabric.id },
+          data: { stock: { decrement: item.quantity } },
+        });
+      }
+
+      // 5. Crear la orden (Si algo falló antes, nada de lo anterior se guarda)
+      return tx.order.create({
+        data: {
+          userId,
+          subtotal,
+          total: subtotal,
+          items: { create: orderItemsData },
+        },
+        include: { items: true },
+      });
     });
   }
 
-  // Obtener una orden por ID
   async findOne(id: string) {
     return this.prisma.order.findUniqueOrThrow({
       where: { id },
-      include: { items: { include: { attributes: true, product: true } } },
+      include: { items: true },
     });
   }
 
-  // Crear nueva orden
-  async create(data: CreateOrderInput) {
-    const { userId, items, notes } = data;
-
-    let subtotal = 0;
-    let total = 0;
-
-    // Procesar cada item de la orden
-    const orderItemsData = await Promise.all(
-      items.map(async (item) => {
-        // 1. Buscar producto
-        const product = await this.prisma.product.findUnique({
-          where: { id: item.productId },
-        });
-
-        if (!product) {
-          throw new NotFoundException(
-            `Producto no encontrado: ${item.productId}`,
-          );
-        }
-
-        // 2. Validar stock disponible
-        if (product.stock < item.quantity) {
-          throw new BadRequestException(
-            `Stock insuficiente para "${product.name}". Disponible: ${product.stock}, solicitado: ${item.quantity}`,
-          );
-        }
-
-        // 3. Buscar atributos seleccionados
-        const attributeValues = await this.prisma.attributeValue.findMany({
-          where: { id: { in: item.attributeValueIds } },
-        });
-
-        // 4. Calcular precio con modificadores
-        const priceModifier = attributeValues.reduce(
-          (sum, av) => sum + av.priceModifier,
-          0,
-        );
-
-        const unitBasePrice = product.basePrice;
-        const unitTotalPrice = product.basePrice + priceModifier;
-
-        // 5. Acumular totales
-        subtotal += unitBasePrice * item.quantity;
-        total += unitTotalPrice * item.quantity;
-
-        // 6. Descontar stock
-        await this.prisma.product.update({
-          where: { id: product.id },
-          data: { stock: product.stock - item.quantity },
-        });
-
-        // 7. Retornar datos del item
-        return {
-          productId: item.productId,
-          quantity: item.quantity,
-          unitBasePrice,
-          unitTotalPrice,
-          attributes: {
-            connect: item.attributeValueIds.map((id) => ({ id })),
-          },
-        };
-      }),
-    );
-
-    // 8. Crear orden con todos los items
-    return this.prisma.order.create({
-      data: {
-        userId,
-        subtotal,
-        total,
-        notes,
-        items: { create: orderItemsData },
-      },
-      include: {
-        items: {
-          include: { attributes: true, product: true },
-        },
-      },
+  async findAll(userId: string) {
+    return this.prisma.order.findMany({
+      where: { userId },
+      include: { items: true },
+      orderBy: { createdAt: 'desc' },
     });
   }
 }

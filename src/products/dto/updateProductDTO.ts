@@ -1,24 +1,13 @@
-import { IsString, IsNumber, IsOptional, IsUrl } from 'class-validator';
-import { Type } from 'class-transformer';
+import { IsString, IsOptional, IsUrl, IsBoolean } from 'class-validator';
 
-export class UpdateProductDTO {
+export class UpdateProductDto {
   @IsString()
   @IsOptional()
-  name!: string;
+  name?: string;
 
   @IsString()
   @IsOptional()
-  description!: string;
-
-  @Type(() => Number)
-  @IsNumber()
-  @IsOptional()
-  basePrice!: number;
-
-  @Type(() => Number)
-  @IsNumber()
-  @IsOptional()
-  stock!: number;
+  description?: string;
 
   @IsOptional()
   @IsString()
@@ -28,4 +17,8 @@ export class UpdateProductDTO {
   @IsOptional()
   @IsString()
   imagePublicId?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
 }

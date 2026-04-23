@@ -7,6 +7,12 @@ datasource db {
   provider = "postgresql"
 }
 
+/**
+ * =======================
+ * ENUMS
+ * =======================
+ */
+
 enum Role {
   USER
   ADMIN
@@ -15,69 +21,163 @@ enum Role {
 enum OrderStatus {
   PENDING
   PAID
+  MANUFACTURING
   SHIPPED
   DELIVERED
   CANCELLED
 }
 
+/**
+ * =======================
+ * USER
+ * =======================
+ */
+
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String
-  role      Role     @default(USER)
-  orders    Order[]
+  id       String @id @default(uuid())
+  email    String @unique
+  password String
+  role     Role   @default(USER)
+
+  orders Order[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
+/**
+ * =======================
+ * PRODUCT (base identity)
+ * =======================
+ */
+
 model Product {
-  id            String      @id @default(uuid())
+  id            String  @id @default(uuid())
   name          String
-  description   String
-  basePrice     Float
+  description   String?
+  imageUrl      String?
+  imagePublicId String?
+  isActive      Boolean @default(true)
+
+  variants ProductVariant[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+/**
+ * =======================
+ * WOOD (catalog)
+ * =======================
+ */
+
+model Wood {
+  id            String  @id @default(uuid())
+  name          String
+  imageUrl      String?
+  imagePublicId String?
+  isActive      Boolean @default(true)
+
+  variants ProductVariant[]
+}
+
+/**
+ * =======================
+ * PRODUCT VARIANT (core sellable unit)
+ * =======================
+ */
+
+model ProductVariant {
+  id String @id @default(uuid())
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  woodId String
+  wood   Wood   @relation(fields: [woodId], references: [id], onDelete: Restrict)
+
+  price Float
+  stock Int
+
+  orderItems OrderItem[]
+
+  createdAt DateTime @default(now())
+
+  @@unique([productId, woodId])
+}
+
+/**
+ * =======================
+ * FABRIC (global catalog)
+ * =======================
+ */
+
+model Fabric {
+  id            String  @id @default(uuid())
+  name          String
+  price         Float
   stock         Int
   imageUrl      String?
   imagePublicId String?
-  orderItems    OrderItem[]
+  isActive      Boolean @default(true)
+
+  orderItems OrderItem[]
 }
 
-model Attribute {
-  id     String           @id @default(uuid())
-  name   String           @unique
-  values AttributeValue[]
-}
-
-model AttributeValue {
-  id            String      @id @default(uuid())
-  name          String
-  imageUrl      String?
-  priceModifier Float       @default(0)
-  attributeId   String
-  attribute     Attribute   @relation(fields: [attributeId], references: [id])
-  orderItems    OrderItem[]
-}
+/**
+ * =======================
+ * ORDER
+ * =======================
+ */
 
 model Order {
-  id        String      @id @default(uuid())
-  userId    String
-  user      User        @relation(fields: [userId], references: [id])
-  status    OrderStatus @default(PENDING)
-  subtotal  Float
-  total     Float
-  items     OrderItem[]
-  notes     String?
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
+  id String @id @default(uuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  status OrderStatus @default(PENDING)
+
+  subtotal Float
+  total    Float
+
+  items OrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
+/**
+ * =======================
+ * ORDER ITEM (El Snapshot inmutable)
+ * =======================
+ */
+
 model OrderItem {
-  id             String           @id @default(uuid())
-  orderId        String
-  order          Order            @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  productId      String
-  product        Product          @relation(fields: [productId], references: [id])
-  quantity       Int              @default(1)
-  unitBasePrice  Float
-  unitTotalPrice Float
-  attributes     AttributeValue[]
+  id String @id @default(uuid())
+
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  // RELACIONES (Opcionales por si en el futuro se borra el producto)
+  productVariantId String?
+  variant          ProductVariant? @relation(fields: [productVariantId], references: [id], onDelete: SetNull)
+
+  fabricId String?
+  fabric   Fabric? @relation(fields: [fabricId], references: [id], onDelete: SetNull)
+
+  // ==========================================
+  // SNAPSHOT DE DATOS (A PRUEBA DE BORRADOS)
+  // ==========================================
+  productName String // Ej: "Cama Modelo Alaska"
+  woodName    String // Ej: "Madera de Roble"
+  fabricName  String? // Ej: "Lona Impermeable Gris"
+
+  quantity Int @default(1)
+
+  unitWoodPrice   Float
+  unitFabricPrice Float
+  unitTotalPrice  Float
+
+  createdAt DateTime @default(now())
 }
