@@ -1,58 +1,51 @@
 import {
   Controller,
   Get,
-  Post,
-  Body,
   Patch,
   Param,
+  Body,
   Delete,
+  ParseUUIDPipe,
+  UseGuards,
 } from '@nestjs/common';
 import { UsersService } from './users.service.js';
 import { Prisma, Role } from '../generated/prisma/client.js';
-import { UseGuards } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../auth/guards/roles.guard.js';
 import { Roles } from '../auth/decorators/roles.decorator.js';
 import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
 
 @Controller('users')
-// @UseGuards(AuthGuard('jwt'), RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @Post()
-  create(@Body() userData: Prisma.UserCreateInput) {
-    return this.usersService.create(userData);
-  }
-
   @Get('me')
   getProfile(@CurrentUser() user: any) {
-    // Aquí el usuario logueado puede ver su propio perfil
-    // ya inyectado directamente por nuestro decorador
-    return {
-      message: 'Este es tu perfil privado',
-      userObject: user,
-    };
+    return user;
   }
 
   @Get()
+  @Roles(Role.ADMIN)
   findAll() {
     return this.usersService.findAll();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  @Roles(Role.ADMIN)
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.usersService.findOne(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() userData: Prisma.UserUpdateInput) {
+  @Roles(Role.ADMIN)
+  update(@Param('id', ParseUUIDPipe) id: string, @Body() userData: Prisma.UserUpdateInput) {
     return this.usersService.update(id, userData);
   }
 
   @Delete(':id')
   @Roles(Role.ADMIN)
-  remove(@Param('id') id: string) {
+  remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.usersService.remove(id);
   }
 }

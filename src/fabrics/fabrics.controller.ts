@@ -9,12 +9,17 @@ import {
   UseInterceptors,
   UploadedFile,
   ParseUUIDPipe,
+  UseGuards,
 } from '@nestjs/common';
 import { FabricService } from './fabrics.service.js';
 import { CreateFabricDto } from './dto/create-fabric.dto.js';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CloudinaryService } from '../cloudinary/cloudinary.service.js';
 import { UpdateFabricDto } from './dto/update-fabric.dto.js';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
+import { RolesGuard } from '../auth/guards/roles.guard.js';
+import { Roles } from '../auth/decorators/roles.decorator.js';
+import { Role } from '../generated/prisma/client.js';
 
 @Controller('fabric')
 export class FabricController {
@@ -22,28 +27,6 @@ export class FabricController {
     private readonly fabricService: FabricService,
     private readonly cloudinaryService: CloudinaryService,
   ) {}
-
-  @Post()
-  @UseInterceptors(FileInterceptor('file'))
-  async create(
-    @UploadedFile() file: Express.Multer.File,
-    @Body() createFabricDto: CreateFabricDto,
-  ) {
-    let { imageUrl, imagePublicId, ...rest } = createFabricDto;
-
-    if (file) {
-      const upload = await this.cloudinaryService.uploadFile(file);
-      imageUrl = upload.secure_url;
-      imagePublicId = upload.public_id;
-    }
-
-    // Pasamos un objeto limpio que cumple con Prisma.FabricCreateInput
-    return this.fabricService.create({
-      ...rest,
-      imageUrl,
-      imagePublicId,
-    });
-  }
 
   @Get()
   findAll() {
@@ -55,7 +38,23 @@ export class FabricController {
     return this.fabricService.findOne(id);
   }
 
+  @Post()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @UseInterceptors(FileInterceptor('file'))
+  async create(@UploadedFile() file: Express.Multer.File, @Body() createFabricDto: CreateFabricDto) {
+    let { imageUrl, imagePublicId, ...rest } = createFabricDto;
+    if (file) {
+      const upload = await this.cloudinaryService.uploadFile(file);
+      imageUrl = upload.secure_url;
+      imagePublicId = upload.public_id;
+    }
+    return this.fabricService.create({ ...rest, imageUrl, imagePublicId });
+  }
+
   @Patch(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   @UseInterceptors(FileInterceptor('file'))
   async update(
     @Param('id', ParseUUIDPipe) id: string,
@@ -64,7 +63,6 @@ export class FabricController {
   ) {
     const existing = await this.fabricService.findOne(id);
     let { imageUrl, imagePublicId, ...rest } = updateFabricDto;
-
     if (file) {
       if (existing.imagePublicId) {
         await this.cloudinaryService.deleteFile(existing.imagePublicId);
@@ -73,15 +71,12 @@ export class FabricController {
       imageUrl = upload.secure_url;
       imagePublicId = upload.public_id;
     }
-
-    return this.fabricService.update(id, {
-      ...rest,
-      imageUrl,
-      imagePublicId,
-    });
+    return this.fabricService.update(id, { ...rest, imageUrl, imagePublicId });
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.fabricService.remove(id);
   }

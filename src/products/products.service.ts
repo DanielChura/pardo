@@ -10,72 +10,39 @@ export class ProductsService {
     private cloudinaryService: CloudinaryService,
   ) {}
 
-  // Trae todos los productos activos y sus variantes de madera
-  async findAll() {
+  findAll() {
     return this.prisma.product.findMany({
       where: { isActive: true },
-      include: {
-        variants: {
-          include: {
-            wood: true, // Para saber qué madera es cada variante
-          },
-        },
-      },
+      include: { variants: { include: { wood: true } } },
     });
   }
 
-  // Busca un producto por ID con todo su detalle de personalización
   async findOne(id: string) {
     const product = await this.prisma.product.findUnique({
       where: { id },
       include: {
         variants: {
-          where: { stock: { gt: 0 } }, // Opcional: Solo traer variantes con stock
-          include: {
-            wood: true,
-          },
+          where: { stock: { gt: 0 } },
+          include: { wood: true },
         },
       },
     });
 
-    if (!product) {
-      throw new NotFoundException(`Product with ID ${id} not found`);
-    }
-
+    if (!product) throw new NotFoundException(`Product with ID ${id} not found`);
     return product;
   }
 
-  async create(data: Prisma.ProductCreateInput) {
-    return await this.prisma.product.create({ data });
+  create(data: Prisma.ProductCreateInput) {
+    return this.prisma.product.create({ data });
   }
 
   async update(id: string, data: Prisma.ProductUpdateInput) {
-    // Verificamos que exista antes de actualizar
     await this.findOne(id);
-
-    return this.prisma.product.update({
-      where: { id },
-      data,
-    });
+    return this.prisma.product.update({ where: { id }, data });
   }
 
-  // Soft Delete: En lugar de borrar de la BD, lo desactivamos
-  // Esto protege el historial de pedidos
   async remove(id: string) {
-    const product = await this.findOne(id);
-
-    // Si realmente quieres borrarlo de la base de datos y de Cloudinary:
-    /*
-    if (product.imagePublicId) {
-      await this.cloudinaryService.deleteFile(product.imagePublicId);
-    }
-    return this.prisma.product.delete({ where: { id } });
-    */
-
-    // Recomendado: Solo desactivar
-    return this.prisma.product.update({
-      where: { id },
-      data: { isActive: false },
-    });
+    await this.findOne(id);
+    return this.prisma.product.update({ where: { id }, data: { isActive: false } });
   }
 }

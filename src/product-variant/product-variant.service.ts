@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  ConflictException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { Prisma, ProductVariant } from '../generated/prisma/client.js';
 
@@ -10,28 +6,21 @@ import { Prisma, ProductVariant } from '../generated/prisma/client.js';
 export class ProductVariantService {
   constructor(private prisma: PrismaService) {}
 
-  async create(
-    data: Prisma.ProductVariantCreateInput,
-  ): Promise<ProductVariant> {
+  async create(data: Prisma.ProductVariantCreateInput): Promise<ProductVariant> {
     try {
       return await this.prisma.productVariant.create({
         data,
         include: { product: true, wood: true },
       });
     } catch (error) {
-      // Manejar el error si ya existe esa combinación Producto-Madera
-      if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        if (error.code === 'P2002') {
-          throw new ConflictException(
-            'This product already has a variant with this wood.',
-          );
-        }
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        throw new ConflictException('This product already has a variant with this wood.');
       }
       throw error;
     }
   }
 
-  async findAll(): Promise<ProductVariant[]> {
+  findAll(): Promise<ProductVariant[]> {
     return this.prisma.productVariant.findMany({
       include: {
         product: { select: { name: true } },
@@ -45,21 +34,13 @@ export class ProductVariantService {
       where: { id },
       include: { product: true, wood: true },
     });
-    if (!variant)
-      throw new NotFoundException(`Variant with ID ${id} not found`);
+    if (!variant) throw new NotFoundException(`Variant with ID ${id} not found`);
     return variant;
   }
 
-  async update(
-    id: string,
-    data: Prisma.ProductVariantUpdateInput,
-  ): Promise<ProductVariant> {
+  async update(id: string, data: Prisma.ProductVariantUpdateInput): Promise<ProductVariant> {
     await this.findOne(id);
-    return this.prisma.productVariant.update({
-      where: { id },
-      data,
-      include: { product: true, wood: true },
-    });
+    return this.prisma.productVariant.update({ where: { id }, data, include: { product: true, wood: true } });
   }
 
   async remove(id: string): Promise<ProductVariant> {

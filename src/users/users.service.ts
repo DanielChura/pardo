@@ -9,40 +9,53 @@ export class UsersService {
 
   async create(data: Prisma.UserCreateInput) {
     const hashedPassword = await bcrypt.hash(data.password, 10);
-    return this.prisma.user.create({
-      data: {
-        ...data,
-        password: hashedPassword,
+    const user = await this.prisma.user.create({
+      data: { ...data, password: hashedPassword },
+    });
+    const { password: _, ...safeUser } = user;
+    return safeUser;
+  }
+
+  findAll() {
+    return this.prisma.user.findMany({
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        createdAt: true,
+        updatedAt: true,
       },
     });
   }
 
-  findAll() {
-    return this.prisma.user.findMany();
-  }
-
   findOne(id: string) {
     return this.prisma.user.findUnique({
-      where: {
-        id: id,
+      where: { id },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        createdAt: true,
+        updatedAt: true,
       },
     });
   }
 
   update(id: string, userData: Prisma.UserUpdateInput) {
     return this.prisma.user.update({
-      where: {
-        id: id,
-      },
+      where: { id },
       data: userData,
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     });
   }
 
   remove(id: string) {
-    return this.prisma.user.delete({
-      where: {
-        id: id,
-      },
-    });
+    return this.prisma.user.delete({ where: { id } });
   }
 }
