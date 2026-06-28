@@ -18,7 +18,10 @@ export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
   @Post()
-  create(@CurrentUser('id') userId: string, @Body() createOrderDto: CreateOrderDto) {
+  create(
+    @CurrentUser('id') userId: string,
+    @Body() createOrderDto: CreateOrderDto,
+  ) {
     return this.ordersService.create(userId, createOrderDto);
   }
 
@@ -28,7 +31,10 @@ export class OrdersController {
   }
 
   @Get(':id')
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return this.ordersService.findOne(id);
+  findOne(
+    @CurrentUser('id') userId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.ordersService.findOne(userId, id);
   }
 }

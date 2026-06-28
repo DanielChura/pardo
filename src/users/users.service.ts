@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { Prisma } from '../generated/prisma/client.js';
 import * as bcrypt from 'bcrypt';
+import { UpdateUserDTO } from './dto/updateUserDTO.js';
 
 @Injectable()
 export class UsersService {
@@ -41,7 +42,11 @@ export class UsersService {
     });
   }
 
-  update(id: string, userData: Prisma.UserUpdateInput) {
+  async update(id: string, userData: UpdateUserDTO) {
+    if (userData.password) {
+      userData.password = await bcrypt.hash(userData.password, 10);
+    }
+
     return this.prisma.user.update({
       where: { id },
       data: userData,

@@ -21,10 +21,16 @@ enum Role {
 enum OrderStatus {
   PENDING
   PAID
-  MANUFACTURING
   SHIPPED
   DELIVERED
   CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
 }
 
 /**
@@ -34,10 +40,13 @@ enum OrderStatus {
  */
 
 model User {
-  id       String @id @default(uuid())
-  email    String @unique
+  id       String  @id @default(uuid())
+  email    String  @unique
   password String
-  role     Role   @default(USER)
+  role     Role    @default(USER)
+  name     String
+  phone    String?
+  address  String?
 
   orders Order[]
 
@@ -96,7 +105,7 @@ model ProductVariant {
   woodId String
   wood   Wood   @relation(fields: [woodId], references: [id], onDelete: Restrict)
 
-  price Float
+  price Int
   stock Int
 
   orderItems OrderItem[]
@@ -115,7 +124,7 @@ model ProductVariant {
 model Fabric {
   id            String  @id @default(uuid())
   name          String
-  price         Float
+  price         Int
   stock         Int
   imageUrl      String?
   imagePublicId String?
@@ -138,13 +147,15 @@ model Order {
 
   status OrderStatus @default(PENDING)
 
-  subtotal Float
-  total    Float
+  subtotal Int
+  total    Int
 
   items OrderItem[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  payments Payment[]
 }
 
 /**
@@ -159,25 +170,34 @@ model OrderItem {
   orderId String
   order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
-  // RELACIONES (Opcionales por si en el futuro se borra el producto)
   productVariantId String?
   variant          ProductVariant? @relation(fields: [productVariantId], references: [id], onDelete: SetNull)
 
-  fabricId String?
-  fabric   Fabric? @relation(fields: [fabricId], references: [id], onDelete: SetNull)
-
-  // ==========================================
-  // SNAPSHOT DE DATOS (A PRUEBA DE BORRADOS)
-  // ==========================================
-  productName String // Ej: "Cama Modelo Alaska"
-  woodName    String // Ej: "Madera de Roble"
-  fabricName  String? // Ej: "Lona Impermeable Gris"
+  fabricId    String?
+  fabric      Fabric? @relation(fields: [fabricId], references: [id], onDelete: SetNull)
+  productName String
+  woodName    String
+  fabricName  String?
 
   quantity Int @default(1)
 
-  unitWoodPrice   Float
-  unitFabricPrice Float
-  unitTotalPrice  Float
+  unitWoodPrice   Int
+  unitFabricPrice Int
+  unitTotalPrice  Int
 
   createdAt DateTime @default(now())
+}
+
+model Payment {
+  id String @id @default(uuid())
+
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id])
+
+  amount Int
+
+  status PaymentStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

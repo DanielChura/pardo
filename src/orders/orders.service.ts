@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateOrderDto } from './dto/create-order.dto.js';
 
@@ -20,13 +24,18 @@ export class OrdersService {
         const fabric = await tx.fabric.findUnique({
           where: { id: item.fabricId },
         });
-
         if (!variant || !fabric) {
           throw new NotFoundException('Variant or Fabric not found');
         }
 
+        if (fabric.stock < item.quantity) {
+          throw new BadRequestException('Fabric is out of stock');
+        }
+
         if (variant.stock < item.quantity) {
-          throw new BadRequestException(`Insufficient stock for ${variant.product.name}`);
+          throw new BadRequestException(
+            `Insufficient stock for ${variant.product.name}`,
+          );
         }
 
         const unitTotalPrice = variant.price + fabric.price;
@@ -45,26 +54,31 @@ export class OrdersService {
         });
 
         await tx.productVariant.update({
-          where: { id: variant.id },
+          where: { id: variant.id, stock: { gte: item.quantity } },
           data: { stock: { decrement: item.quantity } },
         });
 
         await tx.fabric.update({
-          where: { id: fabric.id },
+          where: { id: fabric.id, stock: { gte: item.quantity } },
           data: { stock: { decrement: item.quantity } },
         });
       }
 
       return tx.order.create({
-        data: { userId, subtotal, total: subtotal, items: { create: orderItemsData } },
+        data: {
+          userId,
+          subtotal,
+          total: subtotal,
+          items: { create: orderItemsData },
+        },
         include: { items: true },
       });
     });
   }
 
-  findOne(id: string) {
+  findOne(userId: string, id: string) {
     return this.prisma.order.findUniqueOrThrow({
-      where: { id },
+      where: { id: id, userId: userId },
       include: { items: true },
     });
   }

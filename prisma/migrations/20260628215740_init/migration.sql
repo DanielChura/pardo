@@ -22,6 +22,7 @@ CREATE TABLE "Product" (
     "name" TEXT NOT NULL,
     "description" TEXT,
     "imageUrl" TEXT,
+    "imagePublicId" TEXT,
     "isActive" BOOLEAN NOT NULL DEFAULT true,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -34,6 +35,7 @@ CREATE TABLE "Wood" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "imageUrl" TEXT,
+    "imagePublicId" TEXT,
     "isActive" BOOLEAN NOT NULL DEFAULT true,
 
     CONSTRAINT "Wood_pkey" PRIMARY KEY ("id")
@@ -52,15 +54,16 @@ CREATE TABLE "ProductVariant" (
 );
 
 -- CreateTable
-CREATE TABLE "Tela" (
+CREATE TABLE "Fabric" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "price" DOUBLE PRECISION NOT NULL,
     "stock" INTEGER NOT NULL,
     "imageUrl" TEXT,
+    "imagePublicId" TEXT,
     "isActive" BOOLEAN NOT NULL DEFAULT true,
 
-    CONSTRAINT "Tela_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "Fabric_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -81,13 +84,13 @@ CREATE TABLE "OrderItem" (
     "id" TEXT NOT NULL,
     "orderId" TEXT NOT NULL,
     "productVariantId" TEXT,
-    "telaId" TEXT,
+    "fabricId" TEXT,
     "productName" TEXT NOT NULL,
     "woodName" TEXT NOT NULL,
-    "telaName" TEXT,
+    "fabricName" TEXT,
     "quantity" INTEGER NOT NULL DEFAULT 1,
     "unitWoodPrice" DOUBLE PRECISION NOT NULL,
-    "unitTelaPrice" DOUBLE PRECISION NOT NULL,
+    "unitFabricPrice" DOUBLE PRECISION NOT NULL,
     "unitTotalPrice" DOUBLE PRECISION NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -116,4 +119,4 @@ ALTER TABLE "OrderItem" ADD CONSTRAINT "OrderItem_orderId_fkey" FOREIGN KEY ("or
 ALTER TABLE "OrderItem" ADD CONSTRAINT "OrderItem_productVariantId_fkey" FOREIGN KEY ("productVariantId") REFERENCES "ProductVariant"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "OrderItem" ADD CONSTRAINT "OrderItem_telaId_fkey" FOREIGN KEY ("telaId") REFERENCES "Tela"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "OrderItem" ADD CONSTRAINT "OrderItem_fabricId_fkey" FOREIGN KEY ("fabricId") REFERENCES "Fabric"("id") ON DELETE SET NULL ON UPDATE CASCADE;

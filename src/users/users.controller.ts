@@ -14,6 +14,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../auth/guards/roles.guard.js';
 import { Roles } from '../auth/decorators/roles.decorator.js';
 import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
+import { UpdateUserDTO } from './dto/updateUserDTO.js';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -22,7 +23,7 @@ export class UsersController {
 
   @Get('me')
   getProfile(@CurrentUser() user: any) {
-    return user;
+    return this.usersService.findOne(user.id);
   }
 
   @Get()
@@ -39,7 +40,10 @@ export class UsersController {
 
   @Patch(':id')
   @Roles(Role.ADMIN)
-  update(@Param('id', ParseUUIDPipe) id: string, @Body() userData: Prisma.UserUpdateInput) {
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() userData: UpdateUserDTO,
+  ) {
     return this.usersService.update(id, userData);
   }
 
