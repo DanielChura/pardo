@@ -5,6 +5,7 @@ import { PrismaModule } from '../prisma/prisma.module.js';
 
 @Module({
   imports: [PrismaModule],
+  exports: [OrdersService],
   controllers: [OrdersController],
   providers: [OrdersService],
 })

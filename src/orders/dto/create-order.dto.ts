@@ -8,6 +8,14 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
+export enum OrderStatus {
+  PENDING = 'PENDING',
+  PAID = 'PAID',
+  SHIPPED = 'SHIPPED',
+  DELIVERED = 'DELIVERED',
+  CANCELLED = 'CANCELLED',
+}
+
 class OrderItemDto {
   @IsUUID()
   @IsNotEmpty()

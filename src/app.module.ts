@@ -9,6 +9,8 @@ import { CloudinaryModule } from './cloudinary/cloudinary.module.js';
 import { WoodModule } from './wood/wood.module.js';
 import { FabricsModule } from './fabrics/fabrics.module.js';
 import { ProductVariantModule } from './product-variant/product-variant.module.js';
+import { StripeModule } from './stripe/stripe.module.js';
+import { PaymentModule } from './payment/payment.module.js';
 
 @Module({
   imports: [
@@ -25,6 +27,8 @@ import { ProductVariantModule } from './product-variant/product-variant.module.j
     WoodModule,
     FabricsModule,
     ProductVariantModule,
+    StripeModule,
+    PaymentModule,
   ],
   controllers: [],
   providers: [],

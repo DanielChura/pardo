@@ -4,7 +4,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { CreateOrderDto } from './dto/create-order.dto.js';
+import { CreateOrderDto, OrderStatus } from './dto/create-order.dto.js';
 
 @Injectable()
 export class OrdersService {
@@ -88,6 +88,13 @@ export class OrdersService {
       where: { userId },
       include: { items: true },
       orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async updateStatus(orderId: string, status: OrderStatus) {
+    return await this.prisma.order.update({
+      where: { id: orderId },
+      data: { status },
     });
   }
 }
