@@ -9,7 +9,7 @@ import { ConfigService } from '@nestjs/config';
 import Stripe from 'stripe';
 import { PaymentService } from '../payment/payment.service.js';
 import { PaymentStatus } from '../payment/dto/CreatePaymentDTO.js';
-import { OrderStatus } from 'src/orders/dto/create-order.dto.js';
+import { OrderStatus } from '../orders/dto/create-order.dto.js';
 
 @Injectable()
 export class StripeService {
@@ -111,10 +111,7 @@ export class StripeService {
           PaymentStatus.FAILED,
         );
         if (orderId) {
-          await this.orderService.updateStatus(
-            orderId,
-            OrderStatus.CANCELLED,
-          );
+          await this.orderService.updateStatus(orderId, OrderStatus.CANCELLED);
         }
         break;
       }

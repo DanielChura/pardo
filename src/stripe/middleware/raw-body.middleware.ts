@@ -1,14 +1,2 @@
-import { Injectable, NestMiddleware } from '@nestjs/common';
-import { Request, Response, NextFunction } from 'express';
-import * as bodyParser from 'body-parser';
-
-@Injectable()
-export class RawBodyMiddleware implements NestMiddleware {
-  use(req: Request, res: Response, next: NextFunction) {
-    bodyParser.json({
-      verify: (req: any, res, buf) => {
-        req.rawBody = buf;
-      },
-    })(req, res, next);
-  }
-}
+// No longer used — raw body is captured in main.ts via bodyParser.json verify callback
+export {};

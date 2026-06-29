@@ -11,6 +11,7 @@ import { FabricsModule } from './fabrics/fabrics.module.js';
 import { ProductVariantModule } from './product-variant/product-variant.module.js';
 import { StripeModule } from './stripe/stripe.module.js';
 import { PaymentModule } from './payment/payment.module.js';
+import { FavoritesModule } from './favorites/favorites.module.js';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { PaymentModule } from './payment/payment.module.js';
     ProductVariantModule,
     StripeModule,
     PaymentModule,
+    FavoritesModule,
   ],
   controllers: [],
   providers: [],
