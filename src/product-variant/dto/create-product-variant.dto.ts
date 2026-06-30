@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsNumber, IsUUID, Min } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsObject, IsOptional, IsString, IsUUID, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreateProductVariantDto {
@@ -6,9 +6,9 @@ export class CreateProductVariantDto {
   @IsNotEmpty()
   productId!: string;
 
-  @IsUUID()
+  @IsString()
   @IsNotEmpty()
-  woodId!: string;
+  displayText!: string;
 
   @Type(() => Number)
   @IsNumber()
@@ -19,4 +19,8 @@ export class CreateProductVariantDto {
   @IsNumber()
   @Min(0)
   stock!: number;
+
+  @IsOptional()
+  @IsObject()
+  attributes?: Record<string, unknown>;
 }

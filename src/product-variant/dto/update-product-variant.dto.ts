@@ -1,9 +1,11 @@
-import { IsNumber, IsOptional, Min } from 'class-validator';
+import { IsNumber, IsObject, IsOptional, IsString, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class UpdateProductVariantDto {
-  // Normalmente no cambias el producto o la madera de una variante existente,
-  // solo actualizas su precio o stock.
+  @IsString()
+  @IsOptional()
+  displayText?: string;
+
   @Type(() => Number)
   @IsNumber()
   @Min(0)
@@ -15,4 +17,8 @@ export class UpdateProductVariantDto {
   @Min(0)
   @IsOptional()
   stock?: number;
+
+  @IsOptional()
+  @IsObject()
+  attributes?: Record<string, unknown>;
 }

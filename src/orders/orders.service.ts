@@ -4,7 +4,8 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { CreateOrderDto, OrderStatus } from './dto/create-order.dto.js';
+import { CreateOrderDto } from './dto/create-order.dto.js';
+import { OrderStatus } from '../generated/prisma/client.js';
 
 @Injectable()
 export class OrdersService {
@@ -18,48 +19,39 @@ export class OrdersService {
       for (const item of dto.items) {
         const variant = await tx.productVariant.findUnique({
           where: { id: item.productVariantId },
-          include: { product: true, wood: true },
+          include: { product: { select: { name: true } } },
         });
-
-        const fabric = await tx.fabric.findUnique({
-          where: { id: item.fabricId },
-        });
-        if (!variant || !fabric) {
-          throw new NotFoundException('Variant or Fabric not found');
-        }
-
-        if (fabric.stock < item.quantity) {
-          throw new BadRequestException('Fabric is out of stock');
-        }
+        if (!variant) throw new NotFoundException('Variant not found');
 
         if (variant.stock < item.quantity) {
-          throw new BadRequestException(
-            `Insufficient stock for ${variant.product.name}`,
-          );
+          throw new BadRequestException('Insufficient stock');
         }
 
-        const unitTotalPrice = variant.price + fabric.price;
-        subtotal += unitTotalPrice * item.quantity;
+        let materialName: string | null = null;
+        if (item.materialId) {
+          const material = await tx.material.findUnique({
+            where: { id: item.materialId },
+          });
+          if (!material) throw new NotFoundException('Material not found');
+          materialName = material.name;
+        }
+
+        const unitPrice = variant.price;
+        subtotal += unitPrice * item.quantity;
 
         orderItemsData.push({
           productVariantId: variant.id,
-          fabricId: fabric.id,
+          materialId: item.materialId ?? null,
           productName: variant.product.name,
-          woodName: variant.wood.name,
-          fabricName: fabric.name,
+          variantDisplayText: variant.displayText,
+          variantAttributes: variant.attributes,
+          materialName,
           quantity: item.quantity,
-          unitWoodPrice: variant.price,
-          unitFabricPrice: fabric.price,
-          unitTotalPrice,
+          unitPrice,
         });
 
         await tx.productVariant.update({
           where: { id: variant.id, stock: { gte: item.quantity } },
-          data: { stock: { decrement: item.quantity } },
-        });
-
-        await tx.fabric.update({
-          where: { id: fabric.id, stock: { gte: item.quantity } },
           data: { stock: { decrement: item.quantity } },
         });
       }

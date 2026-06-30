@@ -6,6 +6,14 @@ export interface CloudinaryUpload {
   public_id: string;
 }
 
+export interface Signature {
+  signature: string;
+  timestamp: number;
+  apiKey: string;
+  cloudName: string;
+  folder: string;
+}
+
 @Injectable()
 export class CloudinaryService {
   constructor(@Inject('CLOUDINARY') private cloudinary: typeof Cloudinary) {}
@@ -35,5 +43,28 @@ export class CloudinaryService {
         resolve(result);
       });
     });
+  }
+
+  async uploadToken(): Promise<Signature> {
+    const apiKey = process.env.CLOUDINARY_API_KEY as string;
+    const apiSecret = process.env.CLOUDINARY_API_SECRET as string;
+    const cloudName = process.env.CLOUDINARY_CLOUD_NAME as string;
+    const timestamp = Math.round(new Date().getTime() / 1000);
+    const folder = 'pardo';
+    const signature = await this.cloudinary.utils.api_sign_request(
+      {
+        folder,
+        timestamp: timestamp,
+      },
+      apiSecret,
+    );
+
+    return {
+      signature,
+      timestamp,
+      apiKey,
+      cloudName,
+      folder,
+    };
   }
 }

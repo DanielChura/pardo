@@ -57,8 +57,12 @@ export class UsersService {
         id: true,
         email: true,
         role: true,
+        name: true,
+        phone: true,
+        address: true,
         createdAt: true,
         updatedAt: true,
+        favorites: true,
       },
     });
   }

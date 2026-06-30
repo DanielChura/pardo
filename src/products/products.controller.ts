@@ -14,7 +14,10 @@ import {
 import { ProductsService } from './products.service.js';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { CloudinaryService } from '../cloudinary/cloudinary.service.js';
-import { CreateProductDto } from './dto/createProductDTO.js';
+import {
+  CreateProductDto,
+  UploadProductImageDTO,
+} from './dto/createProductDTO.js';
 import { UpdateProductDto } from './dto/updateProductDTO.js';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../auth/guards/roles.guard.js';
@@ -23,10 +26,7 @@ import { Role } from '../generated/prisma/client.js';
 
 @Controller('products')
 export class ProductsController {
-  constructor(
-    private readonly productsService: ProductsService,
-    private cloudinaryService: CloudinaryService,
-  ) {}
+  constructor(private readonly productsService: ProductsService) {}
 
   @Get()
   findAll() {
@@ -42,7 +42,13 @@ export class ProductsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
   async create(@Body() body: CreateProductDto) {
-    return this.productsService.create(body);
+    return this.productsService.create({
+      name: body.name,
+      details: body.details,
+      care: body.care,
+      isActive: body.isActive,
+      category: { connect: { id: body.categoryId } },
+    });
   }
 
   @Patch(':id')
@@ -52,19 +58,22 @@ export class ProductsController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body() body: UpdateProductDto,
   ) {
-    return this.productsService.update(id, body);
+    const data: Record<string, unknown> = { ...body };
+    if (body.categoryId) {
+      data.category = { connect: { id: body.categoryId } };
+      delete data.categoryId;
+    }
+    return this.productsService.update(id, data);
   }
 
   @Post(':id/images')
-  @UseInterceptors(FilesInterceptor('files'))
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
   async uploadImages(
-    @UploadedFiles() files: Express.Multer.File[],
     @Param('id', ParseUUIDPipe) id: string,
-    @Body('orderIndices') orderIndices?: string | string[],
+    @Body() images: UploadProductImageDTO[],
   ) {
-    return await this.productsService.addImages(id, files, orderIndices);
+    return await this.productsService.addImages(id, images);
   }
 
   @Delete(':id/images/:imageId')

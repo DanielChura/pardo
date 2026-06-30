@@ -1,20 +1,13 @@
 import {
   IsArray,
   IsNotEmpty,
+  IsNumber,
+  IsOptional,
   IsUUID,
   Min,
   ValidateNested,
-  IsNumber,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-
-export enum OrderStatus {
-  PENDING = 'PENDING',
-  PAID = 'PAID',
-  SHIPPED = 'SHIPPED',
-  DELIVERED = 'DELIVERED',
-  CANCELLED = 'CANCELLED',
-}
 
 class OrderItemDto {
   @IsUUID()
@@ -22,8 +15,8 @@ class OrderItemDto {
   productVariantId!: string;
 
   @IsUUID()
-  @IsNotEmpty()
-  fabricId!: string;
+  @IsOptional()
+  materialId?: string;
 
   @IsNumber()
   @Min(1)

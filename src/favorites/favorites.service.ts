@@ -28,7 +28,11 @@ export class FavoritesService {
     return this.prisma.favorite.create({
       data: { userId, productId },
       include: {
-        product: { include: { variants: { include: { wood: true } } } },
+        product: {
+          include: {
+            variants: true,
+          },
+        },
       },
     });
   }
@@ -50,7 +54,11 @@ export class FavoritesService {
     return this.prisma.favorite.findMany({
       where: { userId },
       include: {
-        product: { include: { variants: { include: { wood: true } } } },
+        product: {
+          include: {
+            variants: true,
+          },
+        },
       },
       orderBy: { createdAt: 'desc' },
     });

@@ -57,15 +57,32 @@ model User {
 
 /**
  * =======================
+ * CATEGORY
+ * =======================
+ */
+
+model Category {
+  id   String @id @default(uuid())
+  name String @unique
+
+  products Product[]
+}
+
+/**
+ * =======================
  * PRODUCT (base identity)
  * =======================
  */
 
 model Product {
-  id          String  @id @default(uuid())
-  name        String
-  description String?
-  isActive    Boolean @default(true)
+  id       String  @id @default(uuid())
+  name     String
+  details  String?
+  care     String?
+  isActive Boolean @default(true)
+
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
 
   variants  ProductVariant[]
   images    ProductImage[]
@@ -84,22 +101,8 @@ model ProductImage {
   orderIndex    Int
 
   createdAt DateTime @default(now())
-}
 
-/**
- * =======================
- * WOOD (catalog)
- * =======================
- */
-
-model Wood {
-  id            String  @id @default(uuid())
-  name          String
-  imageUrl      String?
-  imagePublicId String?
-  isActive      Boolean @default(true)
-
-  variants ProductVariant[]
+  @@unique([productId, orderIndex])
 }
 
 /**
@@ -114,35 +117,32 @@ model ProductVariant {
   productId String
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
-  woodId String
-  wood   Wood   @relation(fields: [woodId], references: [id], onDelete: Restrict)
-
-  price Int
-  stock Int
+  displayText String
+  price       Int
+  stock       Int
+  attributes  Json?
 
   orderItems OrderItem[]
 
   createdAt DateTime @default(now())
-
-  @@unique([productId, woodId])
 }
 
 /**
  * =======================
- * FABRIC (global catalog)
+ * MATERIAL (global catalog, optional)
  * =======================
  */
 
-model Fabric {
+model Material {
   id            String  @id @default(uuid())
   name          String
-  price         Int
-  stock         Int
   imageUrl      String?
   imagePublicId String?
   isActive      Boolean @default(true)
 
   orderItems OrderItem[]
+
+  createdAt DateTime @default(now())
 }
 
 /**
@@ -172,7 +172,7 @@ model Order {
 
 /**
  * =======================
- * ORDER ITEM (El Snapshot inmutable)
+ * ORDER ITEM (snapshot inmutable)
  * =======================
  */
 
@@ -185,17 +185,15 @@ model OrderItem {
   productVariantId String?
   variant          ProductVariant? @relation(fields: [productVariantId], references: [id], onDelete: SetNull)
 
-  fabricId    String?
-  fabric      Fabric? @relation(fields: [fabricId], references: [id], onDelete: SetNull)
-  productName String
-  woodName    String
-  fabricName  String?
+  materialId  String?
+  material    Material? @relation(fields: [materialId], references: [id], onDelete: SetNull)
 
-  quantity Int @default(1)
-
-  unitWoodPrice   Int
-  unitFabricPrice Int
-  unitTotalPrice  Int
+  productName         String
+  variantDisplayText  String
+  variantAttributes   Json?
+  materialName        String?
+  quantity            Int    @default(1)
+  unitPrice           Int
 
   createdAt DateTime @default(now())
 }

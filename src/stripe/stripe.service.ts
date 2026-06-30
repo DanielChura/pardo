@@ -9,7 +9,7 @@ import { ConfigService } from '@nestjs/config';
 import Stripe from 'stripe';
 import { PaymentService } from '../payment/payment.service.js';
 import { PaymentStatus } from '../payment/dto/CreatePaymentDTO.js';
-import { OrderStatus } from '../orders/dto/create-order.dto.js';
+import { OrderStatus } from '../generated/prisma/client.js';
 
 @Injectable()
 export class StripeService {
@@ -45,7 +45,7 @@ export class StripeService {
         product_data: {
           name: item.productName,
         },
-        unit_amount: item.unitTotalPrice * 100,
+        unit_amount: item.unitPrice * 100,
       },
       quantity: item.quantity,
     }));
