@@ -1,13 +1,16 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { Prisma } from '../generated/prisma/client.js';
+import { CreateCategoryDto } from './dto/create-category.dto.js';
+import { slugify } from '../products/products.service.js';
+import { UpdateCategoryDto } from './dto/update-category.dto.js';
 
 @Injectable()
 export class CategoriesService {
   constructor(private prisma: PrismaService) {}
 
-  create(data: Prisma.CategoryCreateInput) {
-    return this.prisma.category.create({ data });
+  create(data: CreateCategoryDto) {
+    const slug = slugify(data.name);
+    return this.prisma.category.create({ data: { ...data, slug } });
   }
 
   findAll() {
@@ -16,13 +19,18 @@ export class CategoriesService {
 
   async findOne(id: string) {
     const category = await this.prisma.category.findUnique({ where: { id } });
-    if (!category) throw new NotFoundException(`Category with ID ${id} not found`);
+    if (!category)
+      throw new NotFoundException(`Category with ID ${id} not found`);
     return category;
   }
 
-  async update(id: string, data: Prisma.CategoryUpdateInput) {
+  async update(id: string, data: UpdateCategoryDto) {
     await this.findOne(id);
-    return this.prisma.category.update({ where: { id }, data });
+    const slug = slugify(data.name);
+    return this.prisma.category.update({
+      where: { id },
+      data: { slug, ...data },
+    });
   }
 
   async remove(id: string) {

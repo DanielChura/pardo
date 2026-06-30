@@ -1,10 +1,18 @@
-import { IsNumber, IsObject, IsOptional, IsString, Min } from 'class-validator';
+import { IsNumber, IsOptional, IsString, IsUUID, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class UpdateProductVariantDto {
+  @IsUUID()
+  @IsOptional()
+  colorId?: string;
+
   @IsString()
   @IsOptional()
-  displayText?: string;
+  size?: string;
+
+  @IsString()
+  @IsOptional()
+  dimensions?: string;
 
   @Type(() => Number)
   @IsNumber()
@@ -17,8 +25,4 @@ export class UpdateProductVariantDto {
   @Min(0)
   @IsOptional()
   stock?: number;
-
-  @IsOptional()
-  @IsObject()
-  attributes?: Record<string, unknown>;
 }

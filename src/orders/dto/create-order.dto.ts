@@ -2,7 +2,7 @@ import {
   IsArray,
   IsNotEmpty,
   IsNumber,
-  IsOptional,
+  IsString,
   IsUUID,
   Min,
   ValidateNested,
@@ -14,10 +14,6 @@ class OrderItemDto {
   @IsNotEmpty()
   productVariantId!: string;
 
-  @IsUUID()
-  @IsOptional()
-  materialId?: string;
-
   @IsNumber()
   @Min(1)
   quantity!: number;
@@ -28,4 +24,25 @@ export class CreateOrderDto {
   @ValidateNested({ each: true })
   @Type(() => OrderItemDto)
   items!: OrderItemDto[];
+}
+
+export class CreateOrderItemDto {
+  @IsUUID()
+  @IsNotEmpty()
+  productVariantId: string;
+
+  @IsString()
+  @IsNotEmpty()
+  productName: string;
+
+  @IsString()
+  @IsNotEmpty()
+  variantDisplayText: string;
+
+  @IsNumber()
+  @IsNotEmpty()
+  quantity: number;
+
+  @IsNumber()
+  unitPrice: number;
 }

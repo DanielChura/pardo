@@ -7,11 +7,9 @@ import { ProductsModule } from './products/products.module.js';
 import { OrdersModule } from './orders/orders.module.js';
 import { CloudinaryModule } from './cloudinary/cloudinary.module.js';
 import { CategoriesModule } from './categories/categories.module.js';
-import { MaterialsModule } from './materials/materials.module.js';
 import { ProductVariantModule } from './product-variant/product-variant.module.js';
 import { StripeModule } from './stripe/stripe.module.js';
 import { PaymentModule } from './payment/payment.module.js';
-import { FavoritesModule } from './favorites/favorites.module.js';
 
 @Module({
   imports: [
@@ -26,11 +24,9 @@ import { FavoritesModule } from './favorites/favorites.module.js';
     OrdersModule,
     CloudinaryModule,
     CategoriesModule,
-    MaterialsModule,
     ProductVariantModule,
     StripeModule,
     PaymentModule,
-    FavoritesModule,
   ],
   controllers: [],
   providers: [],

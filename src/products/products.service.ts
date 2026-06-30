@@ -6,7 +6,10 @@ import {
 import { PrismaService } from '../prisma/prisma.service.js';
 import { Prisma } from '../generated/prisma/client.js';
 import { CloudinaryService } from '../cloudinary/cloudinary.service.js';
-import { UploadProductImageDTO } from './dto/createProductDTO.js';
+import {
+  CreateProductDto,
+  UploadProductImageDTO,
+} from './dto/createProductDTO.js';
 
 @Injectable()
 export class ProductsService {
@@ -20,7 +23,8 @@ export class ProductsService {
       where: { isActive: true },
       include: {
         variants: true,
-        images: { orderBy: { orderIndex: 'asc' } },
+        images: true,
+        category: true,
       },
     });
   }
@@ -30,7 +34,8 @@ export class ProductsService {
       where: { id },
       include: {
         variants: true,
-        images: { orderBy: { orderIndex: 'asc' } },
+        images: true,
+        category: true,
       },
     });
 
@@ -39,8 +44,11 @@ export class ProductsService {
     return product;
   }
 
-  create(data: Prisma.ProductCreateInput) {
-    return this.prisma.product.create({ data });
+  async create(data: CreateProductDto) {
+    await this.getCategory(data.categoryId);
+    const slug = slugify(data.name);
+    await this.existProduct(slug);
+    return this.prisma.product.create({ data: { ...data, slug } });
   }
 
   async update(id: string, data: Prisma.ProductUpdateInput) {
@@ -84,4 +92,34 @@ export class ProductsService {
       where: { id: imageId },
     });
   }
+
+  /**
+   * =======================
+   * UTILS
+   * =======================
+   */
+
+  private async getCategory(id: string) {
+    const category = await this.prisma.category.findUnique({ where: { id } });
+    if (!category) throw new NotFoundException('Category not found');
+    return category;
+  }
+
+  async existProduct(slug: string) {
+    const existingProduct = await this.prisma.product.findUnique({
+      where: { slug },
+    });
+
+    if (existingProduct)
+      throw new BadRequestException(`Product with slug ${slug} already exists`);
+  }
+}
+
+export function slugify(text: string) {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/[\s-]+/g, '-')
+    .replace(/^-|-$/g, '');
 }

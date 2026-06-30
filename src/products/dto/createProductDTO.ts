@@ -25,10 +25,6 @@ export class CreateProductDto {
   @IsString()
   @IsOptional()
   care?: string;
-
-  @IsOptional()
-  @IsBoolean()
-  isActive?: boolean;
 }
 
 export class UploadProductImageDTO {

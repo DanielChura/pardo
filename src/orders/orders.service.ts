@@ -4,7 +4,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { CreateOrderDto } from './dto/create-order.dto.js';
+import { CreateOrderDto, CreateOrderItemDto } from './dto/create-order.dto.js';
 import { OrderStatus } from '../generated/prisma/client.js';
 
 @Injectable()
@@ -14,7 +14,7 @@ export class OrdersService {
   async create(userId: string, dto: CreateOrderDto) {
     return this.prisma.$transaction(async (tx) => {
       let subtotal = 0;
-      const orderItemsData: any[] = [];
+      const orderItemsData: CreateOrderItemDto[] = [];
 
       for (const item of dto.items) {
         const variant = await tx.productVariant.findUnique({
@@ -27,25 +27,16 @@ export class OrdersService {
           throw new BadRequestException('Insufficient stock');
         }
 
-        let materialName: string | null = null;
-        if (item.materialId) {
-          const material = await tx.material.findUnique({
-            where: { id: item.materialId },
-          });
-          if (!material) throw new NotFoundException('Material not found');
-          materialName = material.name;
-        }
+        const colorName = await this.getColorName(variant.colorId);
+        const displayText = `${colorName} | ${variant.size} | ${variant.dimensions}`;
 
         const unitPrice = variant.price;
         subtotal += unitPrice * item.quantity;
 
         orderItemsData.push({
           productVariantId: variant.id,
-          materialId: item.materialId ?? null,
           productName: variant.product.name,
-          variantDisplayText: variant.displayText,
-          variantAttributes: variant.attributes,
-          materialName,
+          variantDisplayText: displayText,
           quantity: item.quantity,
           unitPrice,
         });
@@ -88,5 +79,13 @@ export class OrdersService {
       where: { id: orderId },
       data: { status },
     });
+  }
+
+  async getColorName(colorId: string): Promise<string> {
+    const color = await this.prisma.color.findUnique({
+      where: { id: colorId },
+    });
+    if (!color) throw new NotFoundException('Color not found');
+    return color.name;
   }
 }

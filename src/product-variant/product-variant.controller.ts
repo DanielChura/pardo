@@ -35,20 +35,17 @@ export class ProductVariantController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
   create(@Body() dto: CreateProductVariantDto) {
-    return this.variantService.create({
-      displayText: dto.displayText,
-      price: dto.price,
-      stock: dto.stock,
-      attributes: dto.attributes as Prisma.InputJsonValue ?? Prisma.DbNull,
-      product: { connect: { id: dto.productId } },
-    });
+    return this.variantService.create(dto);
   }
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
-  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateProductVariantDto) {
-    return this.variantService.update(id, dto as Prisma.ProductVariantUpdateInput);
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateProductVariantDto,
+  ) {
+    return this.variantService.update(id, dto);
   }
 
   @Delete(':id')

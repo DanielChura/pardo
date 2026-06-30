@@ -64,6 +64,7 @@ model User {
 model Category {
   id   String @id @default(uuid())
   name String @unique
+  slug String @unique
 
   products Product[]
 }
@@ -77,6 +78,7 @@ model Category {
 model Product {
   id       String  @id @default(uuid())
   name     String
+  slug     String  @unique
   details  String?
   care     String?
   isActive Boolean @default(true)
@@ -117,28 +119,13 @@ model ProductVariant {
   productId String
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
-  displayText String
-  price       Int
-  stock       Int
-  attributes  Json?
+  colorId String
+  color   Color  @relation(fields: [colorId], references: [id], onDelete: Restrict)
 
-  orderItems OrderItem[]
-
-  createdAt DateTime @default(now())
-}
-
-/**
- * =======================
- * MATERIAL (global catalog, optional)
- * =======================
- */
-
-model Material {
-  id            String  @id @default(uuid())
-  name          String
-  imageUrl      String?
-  imagePublicId String?
-  isActive      Boolean @default(true)
+  size       String
+  dimensions String
+  price      Int
+  stock      Int
 
   orderItems OrderItem[]
 
@@ -185,15 +172,11 @@ model OrderItem {
   productVariantId String?
   variant          ProductVariant? @relation(fields: [productVariantId], references: [id], onDelete: SetNull)
 
-  materialId  String?
-  material    Material? @relation(fields: [materialId], references: [id], onDelete: SetNull)
+  productName        String
+  variantDisplayText String
 
-  productName         String
-  variantDisplayText  String
-  variantAttributes   Json?
-  materialName        String?
-  quantity            Int    @default(1)
-  unitPrice           Int
+  quantity  Int @default(1)
+  unitPrice Int
 
   createdAt DateTime @default(now())
 }
@@ -234,4 +217,11 @@ model Favorite {
   createdAt DateTime @default(now())
 
   @@unique([userId, productId])
+}
+
+model Color {
+  id              String           @id @default(uuid())
+  name            String
+  hex             String           @unique
+  productVariants ProductVariant[]
 }

@@ -6,14 +6,11 @@ import {
   Delete,
   Param,
   Body,
-  UseInterceptors,
-  UploadedFiles,
   ParseUUIDPipe,
   UseGuards,
 } from '@nestjs/common';
 import { ProductsService } from './products.service.js';
-import { FilesInterceptor } from '@nestjs/platform-express';
-import { CloudinaryService } from '../cloudinary/cloudinary.service.js';
+
 import {
   CreateProductDto,
   UploadProductImageDTO,
@@ -42,13 +39,7 @@ export class ProductsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
   async create(@Body() body: CreateProductDto) {
-    return this.productsService.create({
-      name: body.name,
-      details: body.details,
-      care: body.care,
-      isActive: body.isActive,
-      category: { connect: { id: body.categoryId } },
-    });
+    return this.productsService.create(body);
   }
 
   @Patch(':id')
