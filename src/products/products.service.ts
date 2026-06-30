@@ -6,6 +6,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service.js';
 import { Prisma } from '../generated/prisma/client.js';
 import { CloudinaryService } from '../cloudinary/cloudinary.service.js';
+import { slugify } from '../utils/slug.utils.js';
 import {
   CreateProductDto,
   UploadProductImageDTO,
@@ -113,13 +114,4 @@ export class ProductsService {
     if (existingProduct)
       throw new BadRequestException(`Product with slug ${slug} already exists`);
   }
-}
-
-export function slugify(text: string) {
-  return text
-    .toLowerCase()
-    .trim()
-    .replace(/[^\w\s-]/g, '')
-    .replace(/[\s-]+/g, '-')
-    .replace(/^-|-$/g, '');
 }

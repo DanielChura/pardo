@@ -17,7 +17,8 @@ export class AuthService {
       where: { email: body.email },
     });
 
-    const isValid = user && (await bcrypt.compare(body.password, user.password));
+    const isValid =
+      user && (await bcrypt.compare(body.password, user.password));
     if (!isValid) {
       throw new UnauthorizedException('Invalid credentials');
     }

@@ -50,7 +50,7 @@ export class StripeService {
       quantity: item.quantity,
     }));
 
-    const frontendUrl = this.configService.get<String>('FRONTEND_URL');
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL');
 
     const session = await this.stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -87,7 +87,7 @@ export class StripeService {
 
     switch (event?.type) {
       case 'checkout.session.completed': {
-        const session = event.data.object as Stripe.Checkout.Session;
+        const session = event.data.object;
         const orderId = session.metadata?.orderId as string;
         const sessionId = session.id;
 
@@ -112,7 +112,7 @@ export class StripeService {
       }
 
       case 'checkout.session.expired': {
-        const session = event.data.object as Stripe.Checkout.Session;
+        const session = event.data.object;
         const orderId = session.metadata?.orderId as string;
         const sessionId = session.id;
 

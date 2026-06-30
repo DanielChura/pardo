@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateOrderDto, CreateOrderItemDto } from './dto/create-order.dto.js';
-import { OrderStatus } from '../generated/prisma/client.js';
+import { Order, OrderStatus } from '../generated/prisma/client.js';
 
 @Injectable()
 export class OrdersService {
@@ -19,7 +19,10 @@ export class OrdersService {
       for (const item of dto.items) {
         const variant = await tx.productVariant.findUnique({
           where: { id: item.productVariantId },
-          include: { product: { select: { name: true } } },
+          include: {
+            product: { select: { name: true } },
+            color: { select: { name: true } },
+          },
         });
         if (!variant) throw new NotFoundException('Variant not found');
 
@@ -27,8 +30,7 @@ export class OrdersService {
           throw new BadRequestException('Insufficient stock');
         }
 
-        const colorName = await this.getColorName(variant.colorId);
-        const displayText = `${colorName} | ${variant.size} | ${variant.dimensions}`;
+        const displayText = `${variant.color.name} | ${variant.size} | ${variant.dimensions}`;
 
         const unitPrice = variant.price;
         subtotal += unitPrice * item.quantity;
@@ -74,18 +76,36 @@ export class OrdersService {
     });
   }
 
-  async updateStatus(orderId: string, status: OrderStatus) {
-    return await this.prisma.order.update({
-      where: { id: orderId },
-      data: { status },
-    });
-  }
+  async updateStatus(orderId: string, status: OrderStatus): Promise<Order> {
+    return this.prisma.$transaction(async (tx) => {
+      const order = await tx.order.findUnique({
+        where: { id: orderId },
+      });
 
-  async getColorName(colorId: string): Promise<string> {
-    const color = await this.prisma.color.findUnique({
-      where: { id: colorId },
+      if (!order) throw new NotFoundException('Order not found');
+
+      if (
+        status === OrderStatus.CANCELLED &&
+        order.status !== OrderStatus.CANCELLED
+      ) {
+        const orderItems = await tx.orderItem.findMany({
+          where: { orderId },
+        });
+
+        for (const item of orderItems) {
+          if (!item.productVariantId) continue;
+
+          await tx.productVariant.update({
+            where: { id: item.productVariantId },
+            data: { stock: { increment: item.quantity } },
+          });
+        }
+      }
+
+      return await tx.order.update({
+        where: { id: orderId },
+        data: { status },
+      });
     });
-    if (!color) throw new NotFoundException('Color not found');
-    return color.name;
   }
 }

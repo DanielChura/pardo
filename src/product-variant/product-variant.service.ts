@@ -10,6 +10,7 @@ export class ProductVariantService {
 
   private readonly variantInclude = {
     product: { select: { id: true, name: true, categoryId: true } },
+    color: true,
   };
 
   async create(data: CreateProductVariantDto): Promise<ProductVariant> {
