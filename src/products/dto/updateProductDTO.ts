@@ -10,15 +10,6 @@ export class UpdateProductDto {
   description?: string;
 
   @IsOptional()
-  @IsString()
-  @IsUrl()
-  imageUrl?: string;
-
-  @IsOptional()
-  @IsString()
-  imagePublicId?: string;
-
-  @IsOptional()
   @IsBoolean()
   isActive?: boolean;
 }

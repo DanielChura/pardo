@@ -91,6 +91,16 @@ export class StripeService {
         const orderId = session.metadata?.orderId as string;
         const sessionId = session.id;
 
+        const payment = await this.prisma.payment.findUnique({
+          where: {
+            stripeCheckoutSessionId: sessionId,
+          },
+        });
+
+        if (payment && payment.status !== PaymentStatus.PENDING) {
+          return { received: true };
+        }
+
         await this.paymentService.updatePaymentBySessionId(
           sessionId,
           PaymentStatus.PAID,
@@ -105,6 +115,16 @@ export class StripeService {
         const session = event.data.object as Stripe.Checkout.Session;
         const orderId = session.metadata?.orderId as string;
         const sessionId = session.id;
+
+        const payment = await this.prisma.payment.findUnique({
+          where: {
+            stripeCheckoutSessionId: sessionId,
+          },
+        });
+
+        if (payment && payment.status !== PaymentStatus.PENDING) {
+          return { received: true };
+        }
 
         await this.paymentService.updatePaymentBySessionId(
           sessionId,

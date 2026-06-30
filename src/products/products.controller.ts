@@ -7,12 +7,12 @@ import {
   Param,
   Body,
   UseInterceptors,
-  UploadedFile,
+  UploadedFiles,
   ParseUUIDPipe,
   UseGuards,
 } from '@nestjs/common';
 import { ProductsService } from './products.service.js';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import { CloudinaryService } from '../cloudinary/cloudinary.service.js';
 import { CreateProductDto } from './dto/createProductDTO.js';
 import { UpdateProductDto } from './dto/updateProductDTO.js';
@@ -41,44 +41,40 @@ export class ProductsController {
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
-  @UseInterceptors(FileInterceptor('file'))
-  async create(@UploadedFile() file: Express.Multer.File, @Body() body: CreateProductDto) {
-    let imageUrl: string | undefined;
-    let imagePublicId: string | undefined;
-
-    if (file) {
-      const upload = await this.cloudinaryService.uploadFile(file);
-      imageUrl = upload.secure_url;
-      imagePublicId = upload.public_id;
-    }
-
-    return this.productsService.create({ ...body, imageUrl, imagePublicId });
+  async create(@Body() body: CreateProductDto) {
+    return this.productsService.create(body);
   }
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
-  @UseInterceptors(FileInterceptor('file'))
   async update(
     @Param('id', ParseUUIDPipe) id: string,
-    @UploadedFile() file: Express.Multer.File,
     @Body() body: UpdateProductDto,
   ) {
-    const existingProduct = await this.productsService.findOne(id);
+    return this.productsService.update(id, body);
+  }
 
-    let imageUrl = existingProduct.imageUrl;
-    let imagePublicId = existingProduct.imagePublicId;
+  @Post(':id/images')
+  @UseInterceptors(FilesInterceptor('files'))
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  async uploadImages(
+    @UploadedFiles() files: Express.Multer.File[],
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body('orderIndices') orderIndices?: string | string[],
+  ) {
+    return await this.productsService.addImages(id, files, orderIndices);
+  }
 
-    if (file) {
-      if (existingProduct.imagePublicId) {
-        await this.cloudinaryService.deleteFile(existingProduct.imagePublicId);
-      }
-      const upload = await this.cloudinaryService.uploadFile(file);
-      imageUrl = upload.secure_url;
-      imagePublicId = upload.public_id;
-    }
-
-    return this.productsService.update(id, { ...body, imageUrl, imagePublicId });
+  @Delete(':id/images/:imageId')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  async deleteImage(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('imageId', ParseUUIDPipe) imageId: string,
+  ) {
+    return await this.productsService.deleteImage(id, imageId);
   }
 
   @Delete(':id')

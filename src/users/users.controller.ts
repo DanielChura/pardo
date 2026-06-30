@@ -26,6 +26,11 @@ export class UsersController {
     return this.usersService.findOne(user.id);
   }
 
+  @Patch('me')
+  updateMe(@CurrentUser() user: any, @Body() userData: UpdateUserDTO) {
+    return this.usersService.update(user.id, userData);
+  }
+
   @Get()
   @Roles(Role.ADMIN)
   findAll() {
