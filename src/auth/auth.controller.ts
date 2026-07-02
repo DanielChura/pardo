@@ -21,7 +21,7 @@ export class AuthController {
   }
 
   @Post('login')
-  @Throttle({ login: { limit: 5, blockDuration: 1000 * 60 * 15 } })
+  @Throttle({ short: { limit: 5, ttl: 1000 * 60 * 15 } })
   async login(
     @Body() body: AuthDto,
     @Res({ passthrough: true }) res: Response,

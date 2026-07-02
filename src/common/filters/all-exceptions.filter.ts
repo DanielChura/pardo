@@ -1,11 +1,18 @@
 import {
-  ArgumentsHost,
   Catch,
   ExceptionFilter,
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
+import type { ArgumentsHost } from '@nestjs/common';
 import { Request, Response } from 'express';
+
+export interface ExceptionResponse {
+  statuscode: number;
+  timestamp: string;
+  path: string;
+  message: string;
+}
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
@@ -27,6 +34,8 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const timestamp = new Date().toISOString();
     const path = request.url;
 
-    response.status(statuscode).json({ statuscode, timestamp, path, message });
+    const res: ExceptionResponse = { statuscode, timestamp, path, message };
+
+    response.status(statuscode).json(res);
   }
 }

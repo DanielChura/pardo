@@ -14,8 +14,9 @@ import { ColorsModule } from './colors/colors.module.js';
 import { FavoritesModule } from './favorites/favorites.module.js';
 import { LoggerModule } from 'nestjs-pino';
 import { loggerConfig } from './common/config/logger.config.js';
-import { ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import * as Joi from 'joi';
+import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [
@@ -30,6 +31,11 @@ import * as Joi from 'joi';
         CLOUDINARY_API_KEY: Joi.string().required(),
         CLOUDINARY_API_SECRET: Joi.string().required(),
         STRIPE_API_VERSION: Joi.string().default('2026-06-24.dahlia'),
+        FRONTEND_URL: Joi.string().uri().required(),
+        NODE_ENV: Joi.string()
+          .valid('development', 'production', 'test')
+          .default('development'),
+        PORT: Joi.number().default(3000),
       }),
     }),
     ThrottlerModule.forRoot([
@@ -64,6 +70,11 @@ import * as Joi from 'joi';
     FavoritesModule,
   ],
   controllers: [],
-  providers: [],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}
