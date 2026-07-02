@@ -1,20 +1,32 @@
-import { Body, Controller, Post, Res, UnauthorizedException } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Post,
+  Res,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { AuthService } from './auth.service.js';
 import { AuthDto } from './dto/auth.dto.js';
 import { Cookies } from '../common/decorators/cookies.decorator.js';
 import type { Response } from 'express';
+import { Throttle } from '@nestjs/throttler';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
+  @Throttle({ register: { limit: 5, blockDuration: 1000 * 60 * 15 } })
   register(@Body() body: AuthDto) {
     return this.authService.register(body);
   }
 
   @Post('login')
-  async login(@Body() body: AuthDto, @Res({ passthrough: true }) res: Response) {
+  @Throttle({ login: { limit: 5, blockDuration: 1000 * 60 * 15 } })
+  async login(
+    @Body() body: AuthDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     const result = await this.authService.login(body);
     res.cookie('refresh_token', result.refreshToken, {
       httpOnly: true,

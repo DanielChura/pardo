@@ -4,13 +4,14 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { Prisma } from '../generated/prisma/client.js';
+import { Prisma, Product } from '../generated/prisma/client.js';
 import { CloudinaryService } from '../cloudinary/cloudinary.service.js';
 import { slugify } from '../utils/slug.utils.js';
 import {
   CreateProductDto,
   UploadProductImageDTO,
 } from './dto/createProductDTO.js';
+import { PaginationDto, toPagination } from 'src/common/dto/pagination.dto.js';
 
 @Injectable()
 export class ProductsService {
@@ -19,15 +20,26 @@ export class ProductsService {
     private cloudinaryService: CloudinaryService,
   ) {}
 
-  findAll() {
-    return this.prisma.product.findMany({
-      where: { isActive: true },
-      include: {
-        variants: true,
-        images: true,
-        category: true,
-      },
-    });
+  async findAll(paginationDto: PaginationDto) {
+    const { limit, page } = paginationDto;
+    const skip = (page - 1) * limit;
+    const where = { isActive: true };
+
+    const [data, totalItems] = await Promise.all([
+      this.prisma.product.findMany({
+        where,
+        include: {
+          variants: true,
+          images: true,
+          category: true,
+        },
+        skip,
+        take: limit,
+      }),
+      this.prisma.product.count({ where }),
+    ]);
+
+    return toPagination(data, totalItems, limit, page);
   }
 
   async findOne(id: string) {
@@ -93,12 +105,6 @@ export class ProductsService {
       where: { id: imageId },
     });
   }
-
-  /**
-   * =======================
-   * UTILS
-   * =======================
-   */
 
   private async getCategory(id: string) {
     const category = await this.prisma.category.findUnique({ where: { id } });

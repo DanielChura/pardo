@@ -5,13 +5,15 @@ import * as bodyParser from 'body-parser';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter.js';
 import { Logger } from 'nestjs-pino';
 import cookieParser from 'cookie-parser';
+import { NestExpressApplication } from '@nestjs/platform-express';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     bodyParser: false,
     bufferLogs: true,
   });
   app.use(cookieParser('FirmaSuperSecreta123'));
+  app.set('trust-proxy', 1);
 
   app.use(
     bodyParser.json({

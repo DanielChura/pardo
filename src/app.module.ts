@@ -14,6 +14,7 @@ import { ColorsModule } from './colors/colors.module.js';
 import { FavoritesModule } from './favorites/favorites.module.js';
 import { LoggerModule } from 'nestjs-pino';
 import { loggerConfig } from './common/config/logger.config.js';
+import { ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
   imports: [
@@ -21,6 +22,23 @@ import { loggerConfig } from './common/config/logger.config.js';
       isGlobal: true,
       envFilePath: '.env',
     }),
+    ThrottlerModule.forRoot([
+      {
+        name: 'short',
+        ttl: 1000,
+        limit: 3,
+      },
+      {
+        name: 'medium',
+        ttl: 10000,
+        limit: 20,
+      },
+      {
+        name: 'long',
+        ttl: 60000,
+        limit: 100,
+      },
+    ]),
     LoggerModule.forRoot(loggerConfig),
     PrismaModule,
     UsersModule,

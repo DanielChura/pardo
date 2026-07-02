@@ -63,7 +63,11 @@ export class AuthService {
   }
 
   private createAccessToken(user: any): string {
-    return this.jwtService.sign({ id: user.id, email: user.email, role: user.role });
+    return this.jwtService.sign({
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    });
   }
 
   private async createRefreshToken(userId: string): Promise<string> {
