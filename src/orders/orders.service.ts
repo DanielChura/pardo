@@ -61,11 +61,16 @@ export class OrdersService {
     });
   }
 
-  findOne(userId: string, id: string) {
-    return this.prisma.order.findUniqueOrThrow({
-      where: { id: id, userId: userId },
+  async findOne(userId: string, orderId: string) {
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId, userId: userId },
       include: { items: true },
     });
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+    return order;
   }
 
   findAll(userId: string) {

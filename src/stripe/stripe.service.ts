@@ -27,8 +27,8 @@ export class StripeService {
     });
   }
 
-  async createCheckoutSession(orderId: string, userId: string) {
-    const order = await this.orderService.findOne(orderId, userId);
+  async createCheckoutSession(userId: string, orderId: string) {
+    const order = await this.orderService.findOne(userId, orderId);
     if (!order) {
       throw new NotFoundException('Order not exist');
     }
@@ -45,7 +45,7 @@ export class StripeService {
         product_data: {
           name: item.productName,
         },
-        unit_amount: item.unitPrice * 100,
+        unit_amount: item.unitPrice,
       },
       quantity: item.quantity,
     }));
@@ -75,7 +75,7 @@ export class StripeService {
     return { session: session.url };
   }
 
-  async handleWebhook(rawBody: Buffer<ArrayBufferLike>, signature: string) {
+  async handleWebhook(rawBody: any, signature: string) {
     const webhook = this.configService.get<string>('STRIPE_WEBHOOK_SECRET');
     let event: Stripe.Event;
 

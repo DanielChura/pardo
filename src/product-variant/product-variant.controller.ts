@@ -14,7 +14,7 @@ import { CreateProductVariantDto } from './dto/create-product-variant.dto.js';
 import { UpdateProductVariantDto } from './dto/update-product-variant.dto.js';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../auth/guards/roles.guard.js';
-import { Roles } from '../auth/decorators/roles.decorator.js';
+import { Roles } from '../common/decorators/roles.decorator.js';
 import { Role, Prisma } from '../generated/prisma/client.js';
 
 @Controller('product-variant')

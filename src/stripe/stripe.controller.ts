@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { StripeService } from './stripe.service.js';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
-import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
+import { CurrentUser } from '../common/decorators/current-user.decorator.js';
 
 @Controller('stripe')
 export class StripeController {
@@ -32,6 +32,6 @@ export class StripeController {
     @CurrentUser('id') userId: string,
     @Body() body: { orderId: string },
   ) {
-    return this.stripeService.createCheckoutSession(body.orderId, userId);
+    return this.stripeService.createCheckoutSession(userId, body.orderId);
   }
 }

@@ -12,6 +12,8 @@ import { StripeModule } from './stripe/stripe.module.js';
 import { PaymentModule } from './payment/payment.module.js';
 import { ColorsModule } from './colors/colors.module.js';
 import { FavoritesModule } from './favorites/favorites.module.js';
+import { LoggerModule } from 'nestjs-pino';
+import { loggerConfig } from './common/config/logger.config.js';
 
 @Module({
   imports: [
@@ -19,6 +21,7 @@ import { FavoritesModule } from './favorites/favorites.module.js';
       isGlobal: true,
       envFilePath: '.env',
     }),
+    LoggerModule.forRoot(loggerConfig),
     PrismaModule,
     UsersModule,
     AuthModule,

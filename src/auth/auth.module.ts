@@ -12,8 +12,8 @@ import { JwtStrategy } from './jwt.strategy.js';
     JwtModule.registerAsync({
       global: true,
       useFactory: () => ({
-        secret: process.env.JWT_SECRET as string,
-        signOptions: { expiresIn: '1d' },
+        secret: process.env.JWT_ACCESS_SECRET as string,
+        signOptions: { expiresIn: 900 },
       }),
     }),
     PrismaModule,

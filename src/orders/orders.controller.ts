@@ -10,7 +10,7 @@ import {
 import { OrdersService } from './orders.service.js';
 import { CreateOrderDto } from './dto/create-order.dto.js';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
-import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
+import { CurrentUser } from '../common/decorators/current-user.decorator.js';
 
 @Controller('orders')
 @UseGuards(JwtAuthGuard)

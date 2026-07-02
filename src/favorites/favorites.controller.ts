@@ -1,7 +1,8 @@
-import { Body, Controller, Delete, Get, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Post, UseGuards } from '@nestjs/common';
 import { FavoritesService } from './favorites.service.js';
-import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
+import { CurrentUser } from '../common/decorators/current-user.decorator.js';
 import { IsString } from 'class-validator';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 
 export class CreateFavoriteDto {
   @IsString()
@@ -13,11 +14,13 @@ export class FavoritesController {
   constructor(private readonly favoritesService: FavoritesService) {}
 
   @Get('me')
+  @UseGuards(JwtAuthGuard)
   async getMyFavorites(@CurrentUser('id') userId: string) {
     return await this.favoritesService.findMyFavorites(userId);
   }
 
   @Post('me')
+  @UseGuards(JwtAuthGuard)
   async addFavorite(
     @CurrentUser('id') userId: string,
     @Body() dto: CreateFavoriteDto,
@@ -26,6 +29,7 @@ export class FavoritesController {
   }
 
   @Delete('me')
+  @UseGuards(JwtAuthGuard)
   async deleteFavorite(
     @CurrentUser('id') userId: string,
     @Body() dto: CreateFavoriteDto,
