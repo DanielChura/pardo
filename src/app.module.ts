@@ -15,28 +15,38 @@ import { FavoritesModule } from './favorites/favorites.module.js';
 import { LoggerModule } from 'nestjs-pino';
 import { loggerConfig } from './common/config/logger.config.js';
 import { ThrottlerModule } from '@nestjs/throttler';
+import * as Joi from 'joi';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
+      validationSchema: Joi.object({
+        STRIPE_API_KEY: Joi.string().required(),
+        JWT_SECRET: Joi.string().required(),
+        DATABASE_URL: Joi.string().required(),
+        CLOUDINARY_CLOUD_NAME: Joi.string().required(),
+        CLOUDINARY_API_KEY: Joi.string().required(),
+        CLOUDINARY_API_SECRET: Joi.string().required(),
+        STRIPE_API_VERSION: Joi.string().default('2026-06-24.dahlia'),
+      }),
     }),
     ThrottlerModule.forRoot([
       {
         name: 'short',
         ttl: 1000,
-        limit: 3,
+        limit: 30,
       },
       {
         name: 'medium',
         ttl: 10000,
-        limit: 20,
+        limit: 100,
       },
       {
         name: 'long',
         ttl: 60000,
-        limit: 100,
+        limit: 500,
       },
     ]),
     LoggerModule.forRoot(loggerConfig),

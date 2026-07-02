@@ -50,12 +50,7 @@ export class ProductsController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body() body: UpdateProductDto,
   ) {
-    const data: Record<string, unknown> = { ...body };
-    if (body.categoryId) {
-      data.category = { connect: { id: body.categoryId } };
-      delete data.categoryId;
-    }
-    return this.productsService.update(id, data);
+    return this.productsService.update(id, body);
   }
 
   @Post(':id/images')

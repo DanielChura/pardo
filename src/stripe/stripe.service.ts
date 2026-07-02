@@ -20,10 +20,10 @@ export class StripeService {
     private configService: ConfigService,
     private paymentService: PaymentService,
   ) {
-    const secretKey =
-      this.configService.get<string>('STRIPE_API_KEY') ?? 'adasd';
+    const secretKey = this.configService.get<string>('STRIPE_API_KEY')!;
+    const apiVersion = this.configService.get<string>('STRIPE_API_VERSION');
     this.stripe = new Stripe(secretKey, {
-      apiVersion: '2026-06-24.dahlia',
+      apiVersion: apiVersion as '2026-06-24.dahlia',
     });
   }
 

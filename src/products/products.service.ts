@@ -11,6 +11,7 @@ import {
   CreateProductDto,
   UploadProductImageDTO,
 } from './dto/createProductDTO.js';
+import { UpdateProductDto } from './dto/updateProductDTO.js';
 import { PaginationDto, toPagination } from 'src/common/dto/pagination.dto.js';
 
 @Injectable()
@@ -64,9 +65,14 @@ export class ProductsService {
     return this.prisma.product.create({ data: { ...data, slug } });
   }
 
-  async update(id: string, data: Prisma.ProductUpdateInput) {
+  async update(id: string, data: UpdateProductDto) {
     await this.findOne(id);
-    return this.prisma.product.update({ where: { id }, data });
+    const { categoryId, ...rest } = data;
+    const updateData: Prisma.ProductUpdateInput = { ...rest };
+    if (categoryId) {
+      updateData.category = { connect: { id: categoryId } };
+    }
+    return this.prisma.product.update({ where: { id }, data: updateData });
   }
 
   async remove(id: string) {

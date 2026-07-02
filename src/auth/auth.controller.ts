@@ -16,7 +16,6 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
-  @Throttle({ register: { limit: 5, blockDuration: 1000 * 60 * 15 } })
   register(@Body() body: AuthDto) {
     return this.authService.register(body);
   }
