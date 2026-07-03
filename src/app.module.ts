@@ -15,7 +15,7 @@ import { FavoritesModule } from './favorites/favorites.module.js';
 import { LoggerModule } from 'nestjs-pino';
 import { loggerConfig } from './common/config/logger.config.js';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
-import * as Joi from 'joi';
+import Joi from 'joi';
 import { APP_GUARD } from '@nestjs/core';
 
 @Module({

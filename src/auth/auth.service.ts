@@ -1,8 +1,8 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
-import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service.js';
+import { bcryptAdapter } from './bcrypt.adapter.js';
 
 @Injectable()
 export class AuthService {
@@ -18,7 +18,7 @@ export class AuthService {
     });
 
     const isValid =
-      user && (await bcrypt.compare(body.password, user.password));
+      user && (await bcryptAdapter.compare(body.password, user.password));
     if (!isValid) {
       throw new UnauthorizedException('Invalid credentials');
     }
@@ -71,8 +71,7 @@ export class AuthService {
   }
 
   private async createRefreshToken(userId: string): Promise<string> {
-    const { randomUUID } = await import('crypto');
-    const token = randomUUID();
+    const token = crypto.randomUUID();
     await this.prisma.refreshToken.create({
       data: {
         token,

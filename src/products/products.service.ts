@@ -12,7 +12,7 @@ import {
   UploadProductImageDTO,
 } from './dto/createProductDTO.js';
 import { UpdateProductDto } from './dto/updateProductDTO.js';
-import { PaginationDto, toPagination } from 'src/common/dto/pagination.dto.js';
+import { PaginationDto, toPagination } from '../common/dto/pagination.dto.js';
 
 @Injectable()
 export class ProductsService {
