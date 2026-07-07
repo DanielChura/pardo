@@ -13,6 +13,8 @@
   },
   "extensionsToTreatAsEsm": [".ts"],
   "moduleNameMapper": {
-    "^(\\.{1,2}/.*)\\.js$": "$1"
+    "^(\\.{1,2}/.*)\\.js$": "$1",
+    "^src/(.*)\\.js$": "<rootDir>/../src/$1",
+    "^test/(.*)\\.js$": "<rootDir>/$1"
   }
 }

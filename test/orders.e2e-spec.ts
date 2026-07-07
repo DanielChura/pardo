@@ -1,15 +1,12 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { AppModule } from '../src/app.module.js';
 import { PrismaService } from '../src/prisma/prisma.service.js';
 import { StripeService } from '../src/stripe/stripe.service.js';
 import { jest } from '@jest/globals';
-import { createUser } from './factories/user.factory.js';
-import { createCategory } from './factories/category.factory.js';
-import { createProduct } from './factories/product.factory.js';
-import { createProductVariant } from './factories/product-variant.factory.js';
-import { createColor } from './factories/color.factory.js';
+import { createE2ETestApp, seedData } from './utils/e2e-setup.js';
+import { cleanupDatabase } from './utils/db-cleanup.js';
+import { AuthDto } from '../src/auth/dto/auth.dto.js';
+import { validate } from 'class-validator';
 
 describe('Orders → Payment → Webhook (e2e)', () => {
   let app: INestApplication;
@@ -17,37 +14,21 @@ describe('Orders → Payment → Webhook (e2e)', () => {
 
   // Mock completo de StripeService
   const mockStripeService = {
-    createCheckoutSession: jest.fn().mockResolvedValue({
+    createCheckoutSession: jest.fn().mockReturnValue({
       session: 'https://checkout.stripe.com/test_cs_123',
     }),
     handleWebhook: jest.fn(),
   };
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    })
-      .overrideProvider(StripeService)
-      .useValue(mockStripeService)
-      .compile();
-
-    app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));
-    await app.init();
-    prisma = app.get(PrismaService);
+    const setup = await createE2ETestApp(mockStripeService);
+    app = setup.app;
+    prisma = setup.prisma;
   });
 
   beforeEach(async () => {
-    await prisma.$executeRawUnsafe(
-      'TRUNCATE "RefreshToken", "OrderItem", "Order", "Payment", "ProductVariant", "Product", "Category", "User", "Color" CASCADE'
-    );
-
-    // Seed usando factories
-    const user = await createUser(prisma, { email: 'buyer@e2e.com', password: 'admin123' });
-    const category = await createCategory(prisma, { id: 'cat-e2e' });
-    const product = await createProduct(prisma, category.id, { id: 'prod-e2e' });
-    const color = await createColor(prisma, { id: 'color-e2e' });
-    await createProductVariant(prisma, product.id, color.id, { id: 'var-e2e', stock: 10 });
+    await cleanupDatabase(prisma);
+    await seedData(prisma);
   });
 
   afterAll(async () => {
@@ -55,6 +36,15 @@ describe('Orders → Payment → Webhook (e2e)', () => {
   });
 
   it('full flow: login → create order → checkout → webhook → order PAID + stock -1', async () => {
+    const items = {
+      items: [
+        {
+          productVariantId: '550e8400-e29b-41d4-a716-446655440000',
+          quantity: 1,
+        },
+      ],
+    };
+
     // 1. Login como el usuario que creamos en el seed
     const loginRes = await request(app.getHttpServer())
       .post('/auth/login')
@@ -66,8 +56,12 @@ describe('Orders → Payment → Webhook (e2e)', () => {
     const orderRes = await request(app.getHttpServer())
       .post('/orders')
       .auth(token, { type: 'bearer' })
-      .send({ items: [{ productVariantId: 'var-e2e', quantity: 1 }] })
-      .expect(201);
+      .send(items);
+
+    if (orderRes.status == 400 || orderRes.status == 404) {
+      console.log('Error creating order:', orderRes.body);
+    }
+    expect(orderRes.status).toBe(201);
     const orderId = orderRes.body.id;
 
     // 3. Checkout — genera sesión de Stripe (mockeada)
@@ -120,9 +114,21 @@ describe('Orders → Payment → Webhook (e2e)', () => {
     expect(orderFinal.body.status).toBe('PAID');
 
     // 6. Verificamos que el stock se descontó
+    const variantId = '550e8400-e29b-41d4-a716-446655440000';
     const variant = await prisma.productVariant.findUnique({
-      where: { id: 'var-e2e' },
+      where: { id: variantId },
     });
     expect(variant?.stock).toBe(9); // Era 10, compramos 1
+  });
+
+  it('should have validation errors if email/password are empty', async () => {
+    const dto = new AuthDto();
+    await request(app.getHttpServer())
+      .post('/auth/login')
+      .send(dto)
+      .expect(400);
+
+    const errors = await validate(dto);
+    expect(errors.length).toBeGreaterThan(0);
   });
 });

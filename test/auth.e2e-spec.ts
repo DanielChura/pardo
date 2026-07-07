@@ -1,43 +1,23 @@
-import { INestApplication, ValidationPipe } from '@nestjs/common';
-import { Test } from '@nestjs/testing';
+import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import cookieParser from 'cookie-parser';
-import { jest } from '@jest/globals';
-import { AppModule } from '../src/app.module.js';
 import { PrismaService } from '../src/prisma/prisma.service.js';
-import { StripeService } from '../src/stripe/stripe.service.js';
+import { createE2ETestApp } from './utils/e2e-setup.js';
+import { cleanupDatabase } from './utils/db-cleanup.js';
 
 describe('Auth (e2e)', () => {
   let app: INestApplication;
   let prisma: PrismaService;
 
-  const mockStripe = {
-    createCheckoutSession: jest.fn(),
-    handleWebhook: jest.fn(),
-  };
-
   const testUser = { email: 'daniel@gmail.com', password: 'daniel123456' };
 
   beforeAll(async () => {
-    const moduleFixture = await Test.createTestingModule({
-      imports: [AppModule],
-    })
-      .overrideProvider(StripeService)
-      .useValue(mockStripe)
-      .compile();
-    app = moduleFixture.createNestApplication();
-    app.use(cookieParser('FirmaSuperSecreta123'));
-    app.useGlobalPipes(
-      new ValidationPipe({ whitelist: true, transform: true }),
-    );
-    await app.init();
-    prisma = app.get(PrismaService);
+    const setup = await createE2ETestApp();
+    app = setup.app;
+    prisma = setup.prisma;
   });
 
   beforeEach(async () => {
-    await prisma.$executeRawUnsafe(
-      'TRUNCATE "RefreshToken", "Order", "Payment", "Product", "Category", "User" CASCADE',
-    );
+    await cleanupDatabase(prisma);
   });
 
   afterAll(async () => {

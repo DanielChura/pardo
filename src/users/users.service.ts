@@ -1,14 +1,27 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { Prisma } from '../generated/prisma/client.js';
 import * as bcrypt from 'bcrypt';
 import { UpdateUserDTO } from './dto/updateUserDTO.js';
+import { bcryptAdapter } from '../auth/bcrypt.adapter.js';
 
 @Injectable()
 export class UsersService {
   constructor(private prisma: PrismaService) {}
 
   async create(data: Prisma.UserCreateInput) {
+    const exists = await this.prisma.user.findUnique({
+      where: { email: data.email },
+    });
+
+    if (exists) {
+      throw new BadRequestException('User already exists');
+    }
+
     const hashedPassword = await bcrypt.hash(data.password, 10);
     const user = await this.prisma.user.create({
       data: { ...data, password: hashedPassword },
@@ -29,8 +42,8 @@ export class UsersService {
     });
   }
 
-  findOne(id: string) {
-    return this.prisma.user.findUnique({
+  async findOne(id: string) {
+    const result = await this.prisma.user.findUnique({
       where: { id },
       select: {
         id: true,
@@ -43,11 +56,16 @@ export class UsersService {
         favorites: true,
       },
     });
+
+    if (!result) {
+      throw new NotFoundException('User not exists');
+    }
+    return result;
   }
 
   async update(id: string, userData: UpdateUserDTO) {
     if (userData.password) {
-      userData.password = await bcrypt.hash(userData.password, 10);
+      userData.password = await bcryptAdapter.hash(userData.password, 10);
     }
 
     return this.prisma.user.update({

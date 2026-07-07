@@ -1,4 +1,4 @@
-import { NestFactory, HttpAdapterHost, Reflector } from '@nestjs/core';
+import { NestFactory, HttpAdapterHost } from '@nestjs/core';
 import { AppModule } from './app.module.js';
 import { ValidationPipe } from '@nestjs/common';
 import * as bodyParser from 'body-parser';
@@ -8,7 +8,6 @@ import cookieParser from 'cookie-parser';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { PrismaExceptionFilter } from './common/filters/prisma-exceptions.filter.js';
 import helmet from 'helmet';
-import { ThrottlerGuard, ThrottlerStorage } from '@nestjs/throttler';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
