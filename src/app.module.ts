@@ -12,6 +12,9 @@ import { StripeModule } from './stripe/stripe.module.js';
 import { PaymentModule } from './payment/payment.module.js';
 import { ColorsModule } from './colors/colors.module.js';
 import { FavoritesModule } from './favorites/favorites.module.js';
+import { CartModule } from './cart/cart.module.js';
+import { ReviewsModule } from './reviews/reviews.module.js';
+import { AuditLogModule } from './audit-log/audit-log.module.js';
 import { LoggerModule } from 'nestjs-pino';
 import { loggerConfig } from './common/config/logger.config.js';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
@@ -72,6 +75,9 @@ import { APP_GUARD } from '@nestjs/core';
     PaymentModule,
     ColorsModule,
     FavoritesModule,
+    CartModule,
+    ReviewsModule,
+    AuditLogModule,
   ],
   controllers: [],
   providers: [

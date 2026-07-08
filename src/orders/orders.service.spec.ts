@@ -18,6 +18,8 @@ describe('OrdersService', () => {
             update: jest.fn(),
         },
         orderItem: { findMany: jest.fn() },
+        payment: { create: jest.fn() },
+        cartItem: { deleteMany: jest.fn() },
         productVariant: {
             findUnique: jest.fn(),
             update: jest.fn(),

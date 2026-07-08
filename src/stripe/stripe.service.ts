@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { OrdersService } from '../orders/orders.service.js';
 import { ConfigService } from '@nestjs/config';
@@ -10,9 +6,10 @@ import Stripe from 'stripe';
 import { PaymentService } from '../payment/payment.service.js';
 import { PaymentStatus } from '../payment/dto/CreatePaymentDTO.js';
 import { OrderStatus } from '../generated/prisma/client.js';
+import { PaymentProvider } from '../payments/providers/payment-provider.interface.js';
 
 @Injectable()
-export class StripeService {
+export class StripeService implements PaymentProvider {
   private stripe: Stripe;
   constructor(
     private prisma: PrismaService,
@@ -28,23 +25,16 @@ export class StripeService {
   }
 
   async createCheckoutSession(userId: string, orderId: string) {
-    const order = await this.orderService.findOne(userId, orderId);
-    if (!order) {
-      throw new NotFoundException('Order not exist');
-    }
-
-    const orderItems = await this.prisma.orderItem.findMany({
-      where: {
-        orderId: orderId,
-      },
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId, userId },
+      include: { items: true },
     });
+    if (!order) throw new BadRequestException('Order not found');
 
-    const lines = orderItems.map((item) => ({
+    const lines = order.items.map((item) => ({
       price_data: {
         currency: 'pen',
-        product_data: {
-          name: item.productName,
-        },
+        product_data: { name: item.productName },
         unit_amount: item.unitPrice,
       },
       quantity: item.quantity,
@@ -58,21 +48,32 @@ export class StripeService {
       mode: 'payment',
       success_url: `${frontendUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${frontendUrl}/checkout/cancel`,
-      metadata: {
-        userId,
+      metadata: { userId, orderId },
+    });
+
+    const payment = await this.prisma.payment.findFirst({
+      where: { orderId, status: PaymentStatus.PENDING },
+    });
+
+    if (payment) {
+      await this.prisma.payment.update({
+        where: { id: payment.id },
+        data: {
+          stripeCheckoutSessionId: session.id,
+          stripeClientSecret: session.client_secret as string,
+        },
+      });
+    } else {
+      await this.paymentService.createPayment({
         orderId,
-      },
-    });
+        stripeCheckoutSessionId: session.id,
+        stripeClientSecret: session.client_secret as string,
+        amount: order.total,
+        status: PaymentStatus.PENDING,
+      });
+    }
 
-    await this.paymentService.createPayment({
-      orderId,
-      stripeCheckoutSessionId: session.id,
-      stripeClientSecret: session.client_secret as string,
-      amount: order.total,
-      status: PaymentStatus.PENDING,
-    });
-
-    return { session: session.url };
+    return { sessionUrl: session.url! };
   }
 
   async handleWebhook(rawBody: any, signature: string) {

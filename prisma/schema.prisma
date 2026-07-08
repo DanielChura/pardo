@@ -51,6 +51,9 @@ model User {
   orders       Order[]
   favorites    Favorite[]
   refreshTokens RefreshToken[]
+  cart         Cart?
+  reviews      Review[]
+  auditLogs    AuditLog[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -90,6 +93,7 @@ model Product {
   variants  ProductVariant[]
   images    ProductImage[]
   favorites Favorite[]
+  reviews   Review[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -129,6 +133,7 @@ model ProductVariant {
   stock      Int
 
   orderItems OrderItem[]
+  cartItems  CartItem[]
 
   createdAt DateTime @default(now())
 }
@@ -230,9 +235,83 @@ model RefreshToken {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+/**
+ * =======================
+ * CART
+ * =======================
+ */
+
+model Cart {
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  items CartItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CartItem {
+  id String @id @default(uuid())
+
+  cartId String
+  cart   Cart   @relation(fields: [cartId], references: [id], onDelete: Cascade)
+
+  productVariantId String
+  variant          ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Cascade)
+
+  quantity Int @default(1)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([cartId, productVariantId])
+}
+
 model Color {
   id              String           @id @default(uuid())
   name            String
   hex             String           @unique
   productVariants ProductVariant[]
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  action    String
+  entity    String
+  entityId  String
+  metadata  Json
+  createdAt DateTime @default(now())
+
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  images    ReviewImage[]
+
+  @@unique([userId, productId])
+}
+
+model ReviewImage {
+  id            String   @id @default(uuid())
+  imageUrl      String
+  imagePublicId String
+  createdAt     DateTime @default(now())
+
+  reviewId String
+  review   Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
 }

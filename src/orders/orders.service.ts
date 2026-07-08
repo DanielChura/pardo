@@ -49,7 +49,7 @@ export class OrdersService {
         });
       }
 
-      return tx.order.create({
+      const order = await tx.order.create({
         data: {
           userId,
           subtotal,
@@ -58,6 +58,20 @@ export class OrdersService {
         },
         include: { items: true },
       });
+
+      await tx.payment.create({
+        data: {
+          orderId: order.id,
+          amount: subtotal,
+          status: 'PENDING' as any,
+        },
+      });
+
+      if (dto.cartId) {
+        await tx.cartItem.deleteMany({ where: { cartId: dto.cartId } });
+      }
+
+      return order;
     });
   }
 
