@@ -24,5 +24,31 @@ services:
       PGADMIN_CONFIG_SERVER_MODE: 'False'
       PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
 
+  pardo:
+    container_name: pardo-api
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - '3000:3000'
+    depends_on:
+      postgres:
+        condition: service_started
+    environment:
+      DATABASE_URL: postgresql://daniel:daniel123@postgres:5432/pardo
+      NODE_ENV: production
+      PORT: '3000'
+      JWT_SECRET: ClaveUltraSecreta123456
+      JWT_ACCESS_SECRET: super_secret_access_key
+      JWT_ACCESS_EXPIRATION: 15m
+      JWT_REFRESH_SECRET: super_secret_refresh_key
+      JWT_REFRESH_EXPIRATION: 7d
+      FRONTEND_URL: http://localhost:5173
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
+      STRIPE_API_KEY: ${STRIPE_API_KEY}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
+    
 volumes:
   postgres_data:

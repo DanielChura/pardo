@@ -4,6 +4,7 @@ const isProd = process.env.NODE_ENV === 'production';
 
 export const loggerConfig: Params = {
   pinoHttp: {
+    //isProd ? 'info' : 'debug',
     level: 'warn',
     ...(isProd
       ? {}

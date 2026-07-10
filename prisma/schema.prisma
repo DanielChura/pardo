@@ -48,12 +48,12 @@ model User {
   phone    String?
   address  String?
 
-  orders       Order[]
-  favorites    Favorite[]
+  orders        Order[]
+  favorites     Favorite[]
   refreshTokens RefreshToken[]
-  cart         Cart?
-  reviews      Review[]
-  auditLogs    AuditLog[]
+  cart          Cart?
+  reviews       Review[]
+  auditLogs     AuditLog[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -97,6 +97,8 @@ model Product {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([categoryId, isActive])
 }
 
 model ProductImage {
@@ -136,6 +138,8 @@ model ProductVariant {
   cartItems  CartItem[]
 
   createdAt DateTime @default(now())
+
+  @@index([productId])
 }
 
 /**
@@ -161,6 +165,8 @@ model Order {
   updatedAt DateTime @updatedAt
 
   payments Payment[]
+
+  @@index([userId, createdAt])
 }
 
 /**
@@ -203,6 +209,8 @@ model Payment {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([orderId])
 }
 
 /**
@@ -284,8 +292,8 @@ model AuditLog {
   metadata  Json
   createdAt DateTime @default(now())
 
-  userId    String?
-  user      User?    @relation(fields: [userId], references: [id])
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
 }
 
 model Review {
@@ -295,15 +303,16 @@ model Review {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   productId String
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
-  images    ReviewImage[]
+  images ReviewImage[]
 
   @@unique([userId, productId])
+  @@index([productId])
 }
 
 model ReviewImage {

@@ -5,6 +5,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { ColorsService } from './colors.service.js';
@@ -14,14 +15,15 @@ import { Roles } from '../common/decorators/roles.decorator.js';
 import { Role } from '../generated/prisma/client.js';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../auth/guards/roles.guard.js';
+import { PaginationDto } from '../common/dto/pagination.dto.js';
 
 @Controller('colors')
 export class ColorsController {
   constructor(private readonly colorsService: ColorsService) {}
 
   @Get()
-  findAll() {
-    return this.colorsService.findAll();
+  findAll(@Query() paginationDto: PaginationDto) {
+    return this.colorsService.findAll(paginationDto);
   }
 
   @Post()
