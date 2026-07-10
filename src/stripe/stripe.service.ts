@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { OrdersService } from '../orders/orders.service.js';
 import { ConfigService } from '@nestjs/config';
@@ -141,5 +145,16 @@ export class StripeService implements PaymentProvider {
       }
     }
     return { received: true };
+  }
+
+  async checkHealth() {
+    await Promise.race([
+      this.stripe.products.list(),
+      new Promise((_, reject) => {
+        setTimeout(() => {
+          reject(new ServiceUnavailableException('Service not ready'));
+        }, 5000);
+      }),
+    ]);
   }
 }

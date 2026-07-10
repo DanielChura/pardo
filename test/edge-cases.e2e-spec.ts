@@ -105,9 +105,7 @@ describe('Auth Authorization (401)', () => {
   });
 
   it('GET /orders -> 401 without token', async () => {
-    const res = await request(app.getHttpServer())
-      .get('/orders')
-      .expect(401);
+    const res = await request(app.getHttpServer()).get('/orders').expect(401);
 
     expect(res.body.message).toBeDefined();
   });
@@ -248,9 +246,7 @@ describe('Orders Validation (400)', () => {
       .post('/orders')
       .auth(token, { type: 'bearer' })
       .send({
-        items: [
-          { productVariantId: '550e8400-e29b-41d4-a716-446655440000' },
-        ],
+        items: [{ productVariantId: '550e8400-e29b-41d4-a716-446655440000' }],
       })
       .expect(400);
 
@@ -314,7 +310,11 @@ describe('Forbidden (403)', () => {
     const res = await request(app.getHttpServer())
       .post('/products')
       .auth(userToken, { type: 'bearer' })
-      .send({ name: 'test', slug: 'test', categoryId: '00000000-0000-0000-0000-000000000000' })
+      .send({
+        name: 'test',
+        slug: 'test',
+        categoryId: '00000000-0000-0000-0000-000000000000',
+      })
       .expect(403);
 
     expect(res.body.message).toBeDefined();

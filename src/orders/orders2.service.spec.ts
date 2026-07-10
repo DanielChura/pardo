@@ -28,13 +28,16 @@ describe('OrderService2', () => {
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
-      providers: [OrdersService, PrismaService],
+      providers: [
+        OrdersService,
+        { provide: PrismaService, useValue: mockPrisma },
+      ],
     })
       .overrideProvider(PrismaService)
       .useValue(mockPrisma)
       .compile();
 
-    prisma = module.get<PrismaService>(PrismaService);
+    prisma = module.get(PrismaService);
     ordersService = module.get<OrdersService>(OrdersService);
   });
 
@@ -61,7 +64,7 @@ describe('OrderService2', () => {
       mockPrisma.$transaction.mockImplementation(async (cb: Function) =>
         cb(mockPrisma),
       );
-      mockPrisma.productVariant.findUnique.mockResolvedValue(variant);
+      mockPrisma.productVariant.findUnique.mockReturnValue(variant);
 
       expect(ordersService.create('user-123', items)).rejects.toThrow(
         BadRequestException,
@@ -72,7 +75,7 @@ describe('OrderService2', () => {
       mockPrisma.$transaction.mockImplementation(async (cb: Function) =>
         cb(mockPrisma),
       );
-      mockPrisma.productVariant.findUnique.mockResolvedValue(null);
+      mockPrisma.productVariant.findUnique.mockReturnValue(null);
 
       expect(ordersService.create('user-123', items)).rejects.toThrow(
         NotFoundException,
@@ -96,8 +99,8 @@ describe('OrderService2', () => {
       mockPrisma.$transaction.mockImplementation(async (cb: Function) =>
         cb(mockPrisma),
       );
-      mockPrisma.productVariant.findUnique.mockResolvedValue(variant);
-      mockPrisma.order.create.mockResolvedValue({
+      mockPrisma.productVariant.findUnique.mockReturnValue(variant);
+      mockPrisma.order.create.mockReturnValue({
         orderId: 'ord-123',
         userId: 'user-123',
         subtotal: 10000,

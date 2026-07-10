@@ -20,6 +20,7 @@ import { loggerConfig } from './common/config/logger.config.js';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import Joi from 'joi';
 import { APP_GUARD } from '@nestjs/core';
+import { HealthModule } from './health/health.module.js';
 
 @Module({
   imports: [
@@ -78,6 +79,7 @@ import { APP_GUARD } from '@nestjs/core';
     CartModule,
     ReviewsModule,
     AuditLogModule,
+    HealthModule,
   ],
   controllers: [],
   providers: [

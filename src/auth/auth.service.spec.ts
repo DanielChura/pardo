@@ -60,11 +60,11 @@ describe('AuthService', () => {
         role: 'USER',
       };
 
-      mockPrisma.user.findUnique.mockResolvedValue(user);
+      mockPrisma.user.findUnique.mockReturnValue(user);
       mockJwt.sign.mockReturnValue('acc-token');
       jest.spyOn(crypto, 'randomUUID').mockReturnValue('ref-uuid' as any);
       jest.spyOn(bcryptAdapter, 'compare').mockReturnValue(true as any);
-      mockPrisma.refreshToken.create.mockResolvedValue({} as any);
+      mockPrisma.refreshToken.create.mockReturnValue({});
 
       const result = await authService.login(loginDto);
       expect(result.accessToken).toEqual('acc-token');
@@ -80,8 +80,8 @@ describe('AuthService', () => {
         role: 'USER',
       };
 
-      mockPrisma.user.findUnique.mockResolvedValue(user);
-      jest.spyOn(bcryptAdapter, 'compare').mockResolvedValue(false as any);
+      mockPrisma.user.findUnique.mockReturnValue(user);
+      jest.spyOn(bcryptAdapter, 'compare').mockReturnValue(false as any);
 
       expect(authService.login(badDto)).rejects.toThrow(UnauthorizedException);
     });
@@ -90,12 +90,12 @@ describe('AuthService', () => {
       const expiredDate = new Date();
       expiredDate.setFullYear(expiredDate.getFullYear() - 1);
 
-      mockPrisma.refreshToken.findUnique.mockResolvedValue({
+      mockPrisma.refreshToken.findUnique.mockReturnValue({
         id: '123',
         userId: '321',
         token: 'old-token',
         expiresAt: expiredDate,
-      } as any);
+      });
 
       await expect(authService.refresh('old-token')).rejects.toThrow(
         UnauthorizedException,
@@ -103,7 +103,7 @@ describe('AuthService', () => {
     });
 
     it('should throw on token invalid', async () => {
-      mockPrisma.refreshToken.findUnique.mockResolvedValue(null);
+      mockPrisma.refreshToken.findUnique.mockReturnValue(null);
       const result = authService.refresh('false-token');
 
       await expect(result).rejects.toThrow(UnauthorizedException);

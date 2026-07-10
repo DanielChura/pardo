@@ -25,7 +25,7 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN pnpm install --frozen-lockfile --prod
 
 COPY entrypoint.sh .
-RUN chomd +x entrypoint.sh
+RUN chmod +x entrypoint.sh
 
 COPY --from=builder /pardo/dist ./dist
 COPY --from=builder /pardo/prisma ./prisma

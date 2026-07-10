@@ -15,7 +15,9 @@ export class ReviewsService {
     });
 
     if (!orderItem) {
-      throw new ForbiddenException('Only users with a PAID order containing this product can review.');
+      throw new ForbiddenException(
+        'Only users with a PAID order containing this product can review.',
+      );
     }
 
     return this.prisma.review.create({
@@ -25,7 +27,12 @@ export class ReviewsService {
         userId,
         productId: dto.productId,
         images: dto.images
-          ? { create: dto.images.map((img) => ({ imageUrl: img.imageUrl, imagePublicId: img.imagePublicId })) }
+          ? {
+              create: dto.images.map((img) => ({
+                imageUrl: img.imageUrl,
+                imagePublicId: img.imagePublicId,
+              })),
+            }
           : undefined,
       },
       include: { images: true },

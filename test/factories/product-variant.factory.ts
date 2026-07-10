@@ -4,7 +4,12 @@ export async function createProductVariant(
   prisma: PrismaService,
   productId: string,
   colorId: string,
-  overrides: { size?: string; price?: number; stock?: number; id?: string } = {},
+  overrides: {
+    size?: string;
+    price?: number;
+    stock?: number;
+    id?: string;
+  } = {},
 ) {
   const defaults = {
     size: 'M',
@@ -13,12 +18,12 @@ export async function createProductVariant(
     stock: 10,
   };
   const { id, ...rest } = overrides;
-  const data = { 
-    ...defaults, 
-    ...rest, 
+  const data = {
+    ...defaults,
+    ...rest,
     id,
     productId,
-    colorId
+    colorId,
   };
   return prisma.productVariant.create({ data });
 }

@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { AddToCartDto } from './dto/add-to-cart.dto.js';
 import { UpdateCartItemDto } from './dto/update-cart-item.dto.js';
@@ -32,7 +36,12 @@ export class CartService {
     if (!variant) throw new NotFoundException('Product variant not found');
 
     const existing = await this.prisma.cartItem.findUnique({
-      where: { cartId_productVariantId: { cartId: cart.id, productVariantId: dto.productVariantId } },
+      where: {
+        cartId_productVariantId: {
+          cartId: cart.id,
+          productVariantId: dto.productVariantId,
+        },
+      },
     });
 
     if (existing) {
@@ -44,7 +53,11 @@ export class CartService {
     }
 
     return this.prisma.cartItem.create({
-      data: { cartId: cart.id, productVariantId: dto.productVariantId, quantity: dto.quantity },
+      data: {
+        cartId: cart.id,
+        productVariantId: dto.productVariantId,
+        quantity: dto.quantity,
+      },
       include: { variant: true },
     });
   }
@@ -54,7 +67,8 @@ export class CartService {
       where: { id: itemId },
       include: { cart: true },
     });
-    if (!item || item.cart.userId !== userId) throw new NotFoundException('Cart item not found');
+    if (!item || item.cart.userId !== userId)
+      throw new NotFoundException('Cart item not found');
 
     return this.prisma.cartItem.update({
       where: { id: itemId },
@@ -68,7 +82,8 @@ export class CartService {
       where: { id: itemId },
       include: { cart: true },
     });
-    if (!item || item.cart.userId !== userId) throw new NotFoundException('Cart item not found');
+    if (!item || item.cart.userId !== userId)
+      throw new NotFoundException('Cart item not found');
 
     return this.prisma.cartItem.delete({ where: { id: itemId } });
   }

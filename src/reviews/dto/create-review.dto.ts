@@ -1,4 +1,14 @@
-import { IsUUID, IsInt, Min, Max, IsString, IsOptional, IsArray, ValidateNested, IsUrl } from 'class-validator';
+import {
+  IsUUID,
+  IsInt,
+  Min,
+  Max,
+  IsString,
+  IsOptional,
+  IsArray,
+  ValidateNested,
+  IsUrl,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 class ReviewImageDto {
